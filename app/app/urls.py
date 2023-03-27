@@ -15,7 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from zhk_meetings_app import views as zhk_views
 
 urlpatterns = [
+    path('', zhk_views.home, name='home'),
     path('admin/', admin.site.urls),
+    path('register/', zhk_views.register_request, name='register'),
+    path('login/', zhk_views.login_request, name='login'),
+    path('logout/', zhk_views.logout_request, name='logout'),
 ]
