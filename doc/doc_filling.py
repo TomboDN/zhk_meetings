@@ -13,7 +13,7 @@ type = int(input())
 
 print("Введите тип кооператива ")
 cooperative_type = input()
-print("Введите ФИО участника")
+print("Введите ФИО участника в дательном падеже")
 member_name = input()
 print("Введите название кооператива")
 cooperative_name = input()
@@ -32,21 +32,22 @@ else:
 l = len(cooperative_type)
 cooperative_type = cooperative_type[:l-2] + 'ого'
 if type == 3:
+    print("Введите срок отправки  бюллетеней (дату)")
+    date = input()
+    print("Введите срок отправки  бюллетеней (время в формате \"12:00\")")
+    hours, minutes = input().split(':')
+else:
     print("Введите дату проведения собрания")
     date = input()
-else:
     print("Введите время проведения собрания")
-    date_time = input()
+    hours, minutes = input().split(':')
 print("Введите вопросы для рассмотрения; в конце списка вопросов введите \'end\'")
 questions = list()
 question = input()
 while not question == 'end':
     questions.append(question)
     question = input()
-if type == 3:
-    print("Введите срок отправки  бюллетеней")
-    date_time = input()
-else:
+if type != 3:
     print("Введите адрес проведения собрания")
     meeting_address = input()
 print("Введите приложения для рассмотрения; в конце списка приложений введите \'end\'")
@@ -70,16 +71,17 @@ context = { 'cooperative_type' : cooperative_type,
                 'cooperative_address' : cooperative_address,
                 'cooperative_telephone_number' : cooperative_telephone_number,
                 'cooperative_email_address' : cooperative_email_address,
-                'date_time' : date_time,
                 'notification_number' : notification_number,
                 'short_cooperative_type' : short_cooperative_type,
-                'cooperative_name' : cooperative_name,
+                'date' : date,
+                'hours' : hours,
+                'minutes' : minutes,
                 'questions' : questions_string,
                 'filenames' : filenames_string,
                 'chairman_name' : chairman_name,
                 'today_date' :  today_date}
 
-if type == 1:  
+if type == 1:
     doc = DocxTemplate("template_1.docx") 
     context['meeting_address'] = meeting_address
     
@@ -89,7 +91,6 @@ elif type == 2:
 
 else:
     doc = DocxTemplate("template_3.docx")
-    context['date'] = date
 
 doc.render(context)
 doc.save('notification.docx')
