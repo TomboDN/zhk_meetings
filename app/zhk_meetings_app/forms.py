@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from phonenumber_field.formfields import PhoneNumberField
+from .models import Cooperative
 
 
 class UserRegisterForm(UserCreationForm):
@@ -34,8 +36,13 @@ class CooperativeDataForm(forms.Form):
         ('zhsk', 'ЖСК')
     ]
     cooperative_type = forms.CharField(label='Выберите тип объединения', widget=forms.RadioSelect(choices=ZHK_CHOICES))
-    cooperative_name = forms.CharField()
-    cooperative_itn = forms.CharField()
-    cooperative_address = forms.CharField()
-    cooperative_email_address = forms.EmailField()
-    cooperative_telephone_number = forms.CharField()
+    cooperative_name = forms.CharField(label='Наименование ЖК/ЖСК', help_text='Сведения содержатся в Уставе ЖК/ЖСК')
+    cooperative_itn = forms.CharField(label='ИНН', help_text='Можно узнать на сайте ФНС (www.nalog.gov.ru)')
+    cooperative_address = forms.CharField(label='Адрес ЖК/ЖСК', help_text='Сведения содержатся в Уставе ЖК/ЖСК')
+    cooperative_email_address = forms.EmailField(label='Эл.почта ЖК/ЖСК', widget=forms.EmailInput)
+    cooperative_telephone_number = PhoneNumberField(label='Номер телефона')
+
+    class Meta:
+        model = Cooperative
+        fields = ['cooperative_type', 'cooperative_name', 'cooperative_itn', 'cooperative_address',
+                  'cooperative_email_address', 'cooperative_telephone_number']

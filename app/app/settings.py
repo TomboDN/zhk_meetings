@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'zhk_meetings_app.apps.ZhkMeetingsAppConfig',
     'crispy_forms',
     'crispy_bootstrap5',
+    'django_phonenumbers'
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

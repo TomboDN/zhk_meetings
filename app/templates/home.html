@@ -4,6 +4,5 @@
 
 {% if user.is_authenticated %}
     <p>Вы зашли с email: {{ user.username }}!</p>
-    <p><a href="{% url 'logout' %}">Log out</a></p>
     {% else %}{% endif %}
 {% endblock content %}

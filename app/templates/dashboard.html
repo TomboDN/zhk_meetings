@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <section class="py-4 py-xl-5" style="height: 377.725px;">
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-8 col-lg-6 col-xl-5 col-xxl-4">
+                    <div class="card mb-5">
+                        <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
+                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Личный
+                                кабинет</h2>
+                            <form action="/main_data/" method="get">
+                                <button class="btn btn-primary d-block w-100" id="submit" type="submit"
+                                        style="margin-bottom: 10px;background: var(--bs-card-bg);color: var(--bs-blue);">
+                                    Изменить сведения о кооперативе
+                                </button>
+                            </form>
+                            <form action="/main_data/" method="get">
+                                <button class="btn btn-primary d-block w-100" id="submit-1" type="submit"
+                                        style="margin-bottom: 10px;background: var(--bs-card-bg);color: var(--bs-blue);">
+                                    Изменить сведения о членах и органах кооператива
+                                </button>
+                            </form>
+                            <form action="/main_data/" method="get">
+                                <button class="btn btn-primary d-block w-100" id="submit-2" type="submit"
+                                        style="margin-bottom: 30px;background: var(--bs-card-bg);color: var(--bs-blue);">
+                                    Изменить сведения о вопросах, рассматриваемых Общим собранием
+                                </button>
+                            </form>
+                            <form action="/main_data/" method="get">
+                                <button class="btn btn-primary d-block w-100" id="submit-3" type="submit"
+                                        style="margin-bottom: 10px;"><span style="background-color: transparent;">Провести новое общее собрание</span>
+                                </button>
+                            </form>
+                            <form action="/main_data/" method="get">
+                                <button class="btn btn-primary d-block w-100" id="submit-4" type="submit"
+                                        style="margin-bottom: 10px;"><span style="background-color: transparent;">Продолжить проведение общего собрания</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}

@@ -19,8 +19,10 @@ from zhk_meetings_app import views as zhk_views
 
 urlpatterns = [
     path('', zhk_views.home, name='home'),
+    path('dashboard/', zhk_views.dashboard, name='dashboard'),
     path('admin/', admin.site.urls),
     path('register/', zhk_views.register_request, name='register'),
     path('login/', zhk_views.login_request, name='login'),
     path('logout/', zhk_views.logout_request, name='logout'),
+    path('main_data/', zhk_views.cooperative_main_data, name='main_data')
 ]
