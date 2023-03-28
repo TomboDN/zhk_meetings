@@ -10,15 +10,15 @@
         <button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-3"><span
                 class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse" id="navcol-3">
-            <ul class="navbar-nav mx-auto">
-                <li class="nav-item"><a class="nav-link active" href="/dashboard">Личный кабинет</a></li>
-            </ul>
             {% if user.is_authenticated %}
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link active" href="/dashboard">Личный кабинет</a></li>
+                </ul>
                 <form action="{% url 'logout' %}" method="GET">
                     <button class="btn btn-primary" type="submit">Выйти из аккаунта</button>
                 </form>
             {% else %}
-                <form action="/register/" method="GET">
+                <form action="/register/" method="GET" style="margin-left: 20vw;">
                     <button class="btn btn-primary" type="submit" style="margin-right: 15px;">
                         Зарегистрироваться
                     </button>

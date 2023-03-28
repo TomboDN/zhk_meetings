@@ -10,3 +10,4 @@ django-crispy-forms==2.0
 crispy-bootstrap5==0.7
 django-phonenumber-field==7.0.2
 django-phonenumbers==1.0.1
+django-dynamic-formsets==0.0.8

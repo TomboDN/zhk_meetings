@@ -3,7 +3,8 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
-from .models import Cooperative
+from django.forms.formsets import BaseFormSet
+from .models import Cooperative, CooperativeMember
 
 
 class UserRegisterForm(UserCreationForm):
@@ -46,3 +47,60 @@ class CooperativeDataForm(forms.Form):
         model = Cooperative
         fields = ['cooperative_type', 'cooperative_name', 'cooperative_itn', 'cooperative_address',
                   'cooperative_email_address', 'cooperative_telephone_number']
+
+
+class CooperativeMembersForm(forms.Form):
+    members_file = forms.FileField(label='Поле для загрузки документа с данными членов кооператива',
+                                   widget=forms.FileInput,
+                                   help_text='Прикрепите файл .txt с данными в формате "ФИО:email;"',
+                                   required=False)
+
+    chairman_name = forms.CharField(label='ФИО Председателя правления ЖК/ЖСК')
+    auditor_name = forms.CharField(label='ФИО ревизора / председателя ревизионной комиссии ЖК/ЖСК')
+    auditor_email_address = forms.EmailField(label='Почта ревизионной комиссии / ревизора', widget=forms.EmailInput)
+
+
+class MemberForm(forms.ModelForm):
+    class Meta:
+        model = CooperativeMember
+        exclude = ('cooperative',)
+        labels = {
+            'fio': _('ФИО'),
+            'email_address': _('Почта'),
+        }
+
+
+class BaseMemberFormSet(BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+
+        email_address_list = []
+        duplicates = False
+
+        for form in self.forms:
+            if form.cleaned_data:
+                fio = form.cleaned_data['fio']
+                email_address = form.cleaned_data['email_address']
+
+                if fio and email_address:
+                    if email_address in email_address_list:
+                        duplicates = True
+                    email_address_list.append(email_address)
+
+                if duplicates:
+                    raise forms.ValidationError(
+                        'Links must have unique anchors and URLs.',
+                        code='duplicate_links'
+                    )
+
+                if email_address and not fio:
+                    raise forms.ValidationError(
+                        'All links must have an fio.',
+                        code='missing_fio'
+                    )
+                elif fio and not email_address:
+                    raise forms.ValidationError(
+                        'All links must have an email_address.',
+                        code='missing_email'
+                    )

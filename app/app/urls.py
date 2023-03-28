@@ -24,5 +24,6 @@ urlpatterns = [
     path('register/', zhk_views.register_request, name='register'),
     path('login/', zhk_views.login_request, name='login'),
     path('logout/', zhk_views.logout_request, name='logout'),
-    path('main_data/', zhk_views.cooperative_main_data, name='main_data')
+    path('main_data/', zhk_views.cooperative_main_data, name='main_data'),
+    path('members_data/', zhk_views.cooperative_members_data, name='members_data'),
 ]

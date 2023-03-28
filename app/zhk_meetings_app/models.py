@@ -17,3 +17,19 @@ class Cooperative(models.Model):
     cooperative_address = models.CharField(max_length=255)
     cooperative_email_address = models.EmailField()
     cooperative_telephone_number = PhoneNumberField(null=False, blank=False, unique=True)
+    chairman_name = models.CharField(max_length=255)
+    auditor_name = models.CharField(max_length=255)
+    auditor_email_address = models.EmailField()
+
+
+class CooperativeMember(models.Model):
+    cooperative = models.ForeignKey(Cooperative, on_delete=models.CASCADE)
+    fio = models.CharField(max_length=255)
+    email_address = models.EmailField()
+
+
+class CooperativeQuestions(models.Model):
+    cooperative = models.ForeignKey(Cooperative, on_delete=models.CASCADE)
+    question = models.CharField(max_length=255)
+    regular_only = models.BooleanField()
+    not_solvable_in_absentia = models.BooleanField()
