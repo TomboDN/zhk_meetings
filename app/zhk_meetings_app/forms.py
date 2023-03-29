@@ -4,7 +4,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from django.forms.formsets import BaseFormSet
-from .models import Cooperative, CooperativeMember
+from .models import Cooperative, CooperativeMember, CooperativeMeeting
 
 
 class UserRegisterForm(UserCreationForm):
@@ -104,3 +104,27 @@ class BaseMemberFormSet(BaseFormSet):
                         'All links must have an email_address.',
                         code='missing_email'
                     )
+
+
+class CooperativeMeetingTypeForm(forms.ModelForm):
+    MEETING_TYPES = [
+        ('regular', 'Очередное'),
+        ('irregular', 'Внеочередное')
+    ]
+    meeting_type = forms.CharField(label='Вид собрания', widget=forms.RadioSelect(choices=MEETING_TYPES))
+
+    class Meta:
+        model = CooperativeMeeting
+        fields = ['meeting_type']
+
+
+class CooperativeMeetingFormatForm(forms.ModelForm):
+    MEETING_FORMATS = [
+        ('intramural', 'Очное'),
+        ('extramural', 'Заочное')
+    ]
+    meeting_format = forms.CharField(label='Формат собрания', widget=forms.RadioSelect(choices=MEETING_FORMATS))
+
+    class Meta:
+        model = CooperativeMeeting
+        fields = ['meeting_format']

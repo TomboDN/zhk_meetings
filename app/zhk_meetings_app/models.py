@@ -8,6 +8,25 @@ ZHK_CHOICES = [
         ('zhsk', 'ЖСК')
     ]
 
+MEETING_TYPES = [
+    ('regular', 'Очередное'),
+    ('irregular', 'Внеочередное')
+]
+
+MEETING_FORMATS = [
+    ('intramural', 'Очное'),
+    ('extramural', 'Заочное')
+]
+
+MEETING_STAGES = [
+    ('type', 'Выбор типа'),
+    ('format', 'Выбор формата'),
+    ('questions', 'Выбор вопросов'),
+    ('preparation', 'Стадия подготовки'),
+    ('conducting', 'Стадия проведения'),
+    ('decision-making', 'Стадия принятия решения'),
+]
+
 
 class Cooperative(models.Model):
     cooperative_user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -28,8 +47,17 @@ class CooperativeMember(models.Model):
     email_address = models.EmailField()
 
 
-class CooperativeQuestions(models.Model):
-    cooperative = models.ForeignKey(Cooperative, on_delete=models.CASCADE)
+class CooperativeQuestion(models.Model):
     question = models.CharField(max_length=255)
-    regular_only = models.BooleanField()
-    not_solvable_in_absentia = models.BooleanField()
+    is_report_approval = models.BooleanField()
+    is_available = models.BooleanField(default=False)
+    meeting_type = models.CharField(max_length=9, choices=MEETING_TYPES)
+    meeting_format = models.CharField(max_length=10, choices=MEETING_FORMATS)
+
+
+class CooperativeMeeting(models.Model):
+    cooperative = models.ForeignKey(Cooperative, on_delete=models.CASCADE)
+    meeting_type = models.CharField(max_length=9, choices=MEETING_TYPES)
+    meeting_format = models.CharField(max_length=10, choices=MEETING_FORMATS)
+    questions = models.ManyToManyField(CooperativeQuestion)
+    meeting_stage = models.CharField(max_length=15, choices=MEETING_STAGES)

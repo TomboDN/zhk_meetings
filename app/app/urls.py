@@ -26,4 +26,6 @@ urlpatterns = [
     path('logout/', zhk_views.logout_request, name='logout'),
     path('main_data/', zhk_views.cooperative_main_data, name='main_data'),
     path('members_data/', zhk_views.cooperative_members_data, name='members_data'),
+    path('meeting_type/', zhk_views.cooperative_meeting_type, name='meeting_type'),
+    path('meeting_format/', zhk_views.cooperative_members_data, name='meeting_format'),
 ]

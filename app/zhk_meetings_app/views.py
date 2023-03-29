@@ -5,8 +5,8 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
-    BaseMemberFormSet
-from .models import Cooperative, CooperativeMember
+    BaseMemberFormSet, CooperativeMeetingTypeForm, CooperativeMeetingFormatForm
+from .models import Cooperative, CooperativeMember, CooperativeMeeting
 
 
 def register_request(request):
@@ -104,7 +104,7 @@ def cooperative_members_data(request):
                     new_members.append(CooperativeMember(cooperative=cooperative, fio=fio, email_address=email_address))
 
             # TODO Add request.FILES check
-                # TODO File parser
+            # TODO File parser
 
             try:
                 with transaction.atomic():
@@ -127,3 +127,39 @@ def cooperative_members_data(request):
     }
 
     return render(request, 'cooperative_data/members_data.html', context)
+
+
+def cooperative_meeting_type(request):
+    if request.method == "POST":
+        form = CooperativeMeetingTypeForm(request.POST)
+        if form.is_valid():
+            cooperative = Cooperative.objects.filter(cooperative_user=request.user).first()
+            obj, created = CooperativeMeeting.objects.update_or_create(cooperative=cooperative, defaults=dict(
+                meeting_type=form.cleaned_data.get('meeting_type'),
+                meeting_stage='format',
+            ))
+            messages.info(request, f"Обновление {created}")
+            return redirect('/meeting_format')
+        else:
+            messages.error(request, "Ошибки в полях.")
+            return redirect('/')
+    form = CooperativeMeetingTypeForm()
+    return render(request=request, template_name="meeting_data/meeting_type.html", context={"form": form})
+
+
+def cooperative_meeting_format(request):
+    if request.method == "POST":
+        form = CooperativeMeetingFormatForm(request.POST)
+        if form.is_valid():
+            cooperative = Cooperative.objects.filter(cooperative_user=request.user).first()
+            obj, created = CooperativeMeeting.objects.update_or_create(cooperative=cooperative, defaults=dict(
+                meeting_format=form.cleaned_data.get('meeting_format'),
+                meeting_stage='questions',
+            ))
+            messages.info(request, f"Обновление {created}")
+            return redirect('/')
+        else:
+            messages.error(request, "Ошибки в полях.")
+            return redirect('/')
+    form = CooperativeMeetingFormatForm()
+    return render(request=request, template_name="meeting_data/meeting_format.html", context={"form": form})
