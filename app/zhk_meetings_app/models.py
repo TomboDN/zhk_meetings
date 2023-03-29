@@ -3,11 +3,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.models import User
 
 
-ZHK_CHOICES = [
-        ('zhk', 'ЖК'),
-        ('zhsk', 'ЖСК')
-    ]
-
 MEETING_TYPES = [
     ('regular', 'Очередное'),
     ('irregular', 'Внеочередное')
@@ -19,8 +14,7 @@ MEETING_FORMATS = [
 ]
 
 MEETING_STAGES = [
-    ('type', 'Выбор типа'),
-    ('format', 'Выбор формата'),
+    ('type-format', 'Выбор типа и формата'),
     ('questions', 'Выбор вопросов'),
     ('preparation', 'Стадия подготовки'),
     ('conducting', 'Стадия проведения'),
@@ -30,7 +24,6 @@ MEETING_STAGES = [
 
 class Cooperative(models.Model):
     cooperative_user = models.ForeignKey(User, on_delete=models.CASCADE)
-    cooperative_type = models.CharField(max_length=4, choices=ZHK_CHOICES)
     cooperative_name = models.CharField(max_length=255)
     cooperative_itn = models.CharField(max_length=12)
     cooperative_address = models.CharField(max_length=255)
@@ -61,3 +54,4 @@ class CooperativeMeeting(models.Model):
     meeting_format = models.CharField(max_length=10, choices=MEETING_FORMATS)
     questions = models.ManyToManyField(CooperativeQuestion)
     meeting_stage = models.CharField(max_length=15, choices=MEETING_STAGES)
+    last = models.BooleanField()

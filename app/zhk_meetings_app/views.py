@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
-    BaseMemberFormSet, CooperativeMeetingTypeForm, CooperativeMeetingFormatForm
+    BaseMemberFormSet, CooperativeMeetingTypeFormatForm
 from .models import Cooperative, CooperativeMember, CooperativeMeeting
 
 
@@ -56,11 +56,11 @@ def dashboard(request):
 
 
 def cooperative_main_data(request):
+    cooperative = Cooperative.objects.filter(cooperative_user=request.user).first()
     if request.method == "POST":
         form = CooperativeDataForm(request.POST)
         if form.is_valid():
             obj, created = Cooperative.objects.update_or_create(cooperative_user=request.user, defaults=dict(
-                cooperative_type=form.cleaned_data.get('cooperative_type'),
                 cooperative_name=form.cleaned_data.get('cooperative_name'),
                 cooperative_itn=form.cleaned_data.get('cooperative_itn'),
                 cooperative_address=form.cleaned_data.get('cooperative_address'),
@@ -70,7 +70,18 @@ def cooperative_main_data(request):
             return redirect('/')
         else:
             messages.error(request, "Ошибки в полях.")
-    form = CooperativeDataForm()
+
+    if cooperative:
+        form = CooperativeDataForm(
+            initial={
+                'cooperative_name': cooperative.cooperative_name,
+                'cooperative_itn': cooperative.cooperative_itn,
+                'cooperative_address': cooperative.cooperative_address,
+                'cooperative_email_address': cooperative.cooperative_email_address,
+                'cooperative_telephone_number': cooperative.cooperative_telephone_number
+            })
+    else:
+        form = CooperativeDataForm()
     return render(request=request, template_name="cooperative_data/main_data.html", context={"form": form})
 
 
@@ -89,10 +100,11 @@ def cooperative_members_data(request):
         member_formset = members_form_set(request.POST)
 
         if cooperative_members_form.is_valid() and member_formset.is_valid():
-            cooperative.chairman_name = cooperative_members_form.cleaned_data.get('chairman_name')
-            cooperative.auditor_name = cooperative_members_form.cleaned_data.get('auditor_name')
-            cooperative.auditor_email_address = cooperative_members_form.cleaned_data.get('auditor_email_address')
-            cooperative.save()
+            cooperative, created = Cooperative.objects.update_or_create(cooperative_user=request.user, defaults=dict(
+                chairman_name=cooperative_members_form.cleaned_data.get('chairman_name'),
+                auditor_name=cooperative_members_form.cleaned_data.get('auditor_name'),
+                auditor_email_address=cooperative_members_form.cleaned_data.get('auditor_email_address'),
+                ))
 
             new_members = []
 
@@ -112,13 +124,21 @@ def cooperative_members_data(request):
                     CooperativeMember.objects.bulk_create(new_members)
 
                     messages.success(request, 'Вы обновили данные о членах кооператива.')
+                    return redirect('/dashboard')
 
             except IntegrityError:
                 messages.error(request, 'Ошибка сохранения данных о членах кооператива.')
                 return redirect(reverse('members_data'))
 
     else:
-        cooperative_members_form = CooperativeMembersForm()
+        if cooperative:
+            cooperative_members_form = CooperativeMembersForm(initial={
+                'chairman_name': cooperative.chairman_name,
+                'auditor_name': cooperative.auditor_name,
+                'auditor_email_address': cooperative.auditor_email_address
+            })
+        else:
+            cooperative_members_form = CooperativeMembersForm()
         member_formset = members_form_set(initial=member_data)
 
     context = {
@@ -129,37 +149,21 @@ def cooperative_members_data(request):
     return render(request, 'cooperative_data/members_data.html', context)
 
 
-def cooperative_meeting_type(request):
+def cooperative_meeting_new(request):
     if request.method == "POST":
-        form = CooperativeMeetingTypeForm(request.POST)
+        form = CooperativeMeetingTypeFormatForm(request.POST)
         if form.is_valid():
             cooperative = Cooperative.objects.filter(cooperative_user=request.user).first()
             obj, created = CooperativeMeeting.objects.update_or_create(cooperative=cooperative, defaults=dict(
                 meeting_type=form.cleaned_data.get('meeting_type'),
-                meeting_stage='format',
-            ))
-            messages.info(request, f"Обновление {created}")
-            return redirect('/meeting_format')
-        else:
-            messages.error(request, "Ошибки в полях.")
-            return redirect('/')
-    form = CooperativeMeetingTypeForm()
-    return render(request=request, template_name="meeting_data/meeting_type.html", context={"form": form})
-
-
-def cooperative_meeting_format(request):
-    if request.method == "POST":
-        form = CooperativeMeetingFormatForm(request.POST)
-        if form.is_valid():
-            cooperative = Cooperative.objects.filter(cooperative_user=request.user).first()
-            obj, created = CooperativeMeeting.objects.update_or_create(cooperative=cooperative, defaults=dict(
                 meeting_format=form.cleaned_data.get('meeting_format'),
                 meeting_stage='questions',
+                last=True
             ))
             messages.info(request, f"Обновление {created}")
-            return redirect('/')
+            return redirect('/dashboard')
         else:
             messages.error(request, "Ошибки в полях.")
-            return redirect('/')
-    form = CooperativeMeetingFormatForm()
-    return render(request=request, template_name="meeting_data/meeting_format.html", context={"form": form})
+            return redirect('/meeting_new')
+    form = CooperativeMeetingTypeFormatForm()
+    return render(request=request, template_name="meeting_data/meeting_new.html", context={"form": form})

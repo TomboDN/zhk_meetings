@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 .idea/
+
+app/zhk_meetings_app/migrations/

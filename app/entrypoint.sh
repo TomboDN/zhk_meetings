@@ -11,6 +11,9 @@ then
     echo "PostgreSQL started"
 fi
 
+find ./zhk_meetings_app/migrations -type f -not -name '__init__.py' -delete
+sleep 1
+
 python manage.py flush --no-input
 python manage.py makemigrations
 python manage.py migrate

@@ -7,13 +7,15 @@
                 <div class="col-md-8 col-lg-6 col-xl-5 col-xxl-4">
                     <div class="card mb-5">
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
-                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Выберите вид собрания</h2>
+                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Выберите вид и формат собрания</h2>
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="mb-3">
                                     {{ form.meeting_type|as_crispy_field }}
                                 </div>
-
+                                <div class="mb-3">
+                                    {{ form.meeting_format|as_crispy_field }}
+                                </div>
                                 <div>
                                     <button class="btn btn-primary d-block w-100" id="submit" type="submit">
                                         Сохранить и продолжить

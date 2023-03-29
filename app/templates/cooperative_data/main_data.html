@@ -12,9 +12,6 @@
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="mb-3">
-                                    {{ form.cooperative_type|as_crispy_field }}
-                                </div>
-                                <div class="mb-3">
                                     {{ form.cooperative_name|as_crispy_field }}
                                 </div>
                                 <div class="mb-3">

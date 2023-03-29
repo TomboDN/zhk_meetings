@@ -32,11 +32,6 @@ class UserLoginForm(AuthenticationForm):
 
 
 class CooperativeDataForm(forms.Form):
-    ZHK_CHOICES = [
-        ('zhk', 'ЖК'),
-        ('zhsk', 'ЖСК')
-    ]
-    cooperative_type = forms.CharField(label='Выберите тип объединения', widget=forms.RadioSelect(choices=ZHK_CHOICES))
     cooperative_name = forms.CharField(label='Наименование ЖК/ЖСК', help_text='Сведения содержатся в Уставе ЖК/ЖСК')
     cooperative_itn = forms.CharField(label='ИНН', help_text='Можно узнать на сайте ФНС (www.nalog.gov.ru)')
     cooperative_address = forms.CharField(label='Адрес ЖК/ЖСК', help_text='Сведения содержатся в Уставе ЖК/ЖСК')
@@ -45,7 +40,7 @@ class CooperativeDataForm(forms.Form):
 
     class Meta:
         model = Cooperative
-        fields = ['cooperative_type', 'cooperative_name', 'cooperative_itn', 'cooperative_address',
+        fields = ['cooperative_name', 'cooperative_itn', 'cooperative_address',
                   'cooperative_email_address', 'cooperative_telephone_number']
 
 
@@ -106,25 +101,19 @@ class BaseMemberFormSet(BaseFormSet):
                     )
 
 
-class CooperativeMeetingTypeForm(forms.ModelForm):
+class CooperativeMeetingTypeFormatForm(forms.ModelForm):
     MEETING_TYPES = [
         ('regular', 'Очередное'),
         ('irregular', 'Внеочередное')
     ]
-    meeting_type = forms.CharField(label='Вид собрания', widget=forms.RadioSelect(choices=MEETING_TYPES))
-
-    class Meta:
-        model = CooperativeMeeting
-        fields = ['meeting_type']
-
-
-class CooperativeMeetingFormatForm(forms.ModelForm):
     MEETING_FORMATS = [
         ('intramural', 'Очное'),
         ('extramural', 'Заочное')
     ]
+
+    meeting_type = forms.CharField(label='Вид собрания', widget=forms.RadioSelect(choices=MEETING_TYPES))
     meeting_format = forms.CharField(label='Формат собрания', widget=forms.RadioSelect(choices=MEETING_FORMATS))
 
     class Meta:
         model = CooperativeMeeting
-        fields = ['meeting_format']
+        fields = ['meeting_type', 'meeting_format']
