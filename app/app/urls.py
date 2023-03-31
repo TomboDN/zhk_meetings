@@ -27,4 +27,7 @@ urlpatterns = [
     path('main_data/', zhk_views.cooperative_main_data, name='main_data'),
     path('members_data/', zhk_views.cooperative_members_data, name='members_data'),
     path('meeting_new/', zhk_views.cooperative_meeting_new, name='meeting_new'),
+    path('regular_questions/', zhk_views.regular_questions, name='regular_questions'),
+    path('irregular_intramural_questions/', zhk_views.irregular_intramural_questions, name='irregular_intramural_questions'),
+    path('irregular_extramural_questions/', zhk_views.irregular_extramural_questions, name='irregular_extramural_questions'),
 ]

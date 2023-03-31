@@ -5,7 +5,8 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
-    BaseMemberFormSet, CooperativeMeetingTypeFormatForm
+    BaseMemberFormSet, CooperativeMeetingTypeFormatForm, RegularQuestionsForm, IrregularExtramuralQuestionsForm, \
+    IrregularIntramuralQuestionsForm
 from .models import Cooperative, CooperativeMember, CooperativeMeeting
 
 
@@ -161,9 +162,69 @@ def cooperative_meeting_new(request):
                 last=True
             ))
             messages.info(request, f"Обновление {created}")
-            return redirect('/dashboard')
+            return redirect('/questions')
         else:
             messages.error(request, "Ошибки в полях.")
             return redirect('/meeting_new')
     form = CooperativeMeetingTypeFormatForm()
     return render(request=request, template_name="meeting_data/meeting_new.html", context={"form": form})
+
+
+def regular_questions(request):
+    if request.method == "POST":
+        form = RegularQuestionsForm(request.POST)
+        if form.is_valid():
+            cooperative = Cooperative.objects.filter(cooperative_user=request.user).first()
+            obj, created = CooperativeMeeting.objects.update_or_create(cooperative=cooperative, defaults=dict(
+                meeting_type='meeting_type',
+                meeting_format='meeting_format',
+                questions=form.cleaned_data.get('questions'),
+                last=True
+            ))
+            messages.info(request, f"Обновление {created}")
+            return redirect('/dashboard')
+        else:
+            messages.error(request, "Ошибки в полях.")
+            return redirect('/regular_questions')
+    form = RegularQuestionsForm()
+    return render(request=request, template_name="meeting_data/questions.html", context={"form": form})
+
+
+def irregular_intramural_questions(request):
+    if request.method == "POST":
+        form = IrregularIntramuralQuestionsForm(request.POST)
+        if form.is_valid():
+            cooperative = Cooperative.objects.filter(cooperative_user=request.user).first()
+            obj, created = CooperativeMeeting.objects.update_or_create(cooperative=cooperative, defaults=dict(
+                meeting_type='meeting_type',
+                meeting_format='meeting_format',
+                questions=form.cleaned_data.get('questions'),
+                last=True
+            ))
+            messages.info(request, f"Обновление {created}")
+            return redirect('/dashboard')
+        else:
+            messages.error(request, "Ошибки в полях.")
+            return redirect('/irregular_intramural_questions')
+    form = IrregularIntramuralQuestionsForm()
+    return render(request=request, template_name="meeting_data/questions.html", context={"form": form})
+
+
+def irregular_extramural_questions(request):
+    if request.method == "POST":
+        form = IrregularExtramuralQuestionsForm(request.POST)
+        if form.is_valid():
+            cooperative = Cooperative.objects.filter(cooperative_user=request.user).first()
+            obj, created = CooperativeMeeting.objects.update_or_create(cooperative=cooperative, defaults=dict(
+                meeting_type='meeting_type',
+                meeting_format='meeting_format',
+                questions=form.cleaned_data.get('questions'),
+                last=True
+            ))
+            messages.info(request, f"Обновление {created}")
+            return redirect('/dashboard')
+        else:
+            messages.error(request, "Ошибки в полях.")
+            return redirect('/irregular_extramural_questions')
+    form = IrregularExtramuralQuestionsForm()
+    return render(request=request, template_name="meeting_data/questions.html", context={"form": form})

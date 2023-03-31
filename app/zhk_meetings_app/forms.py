@@ -4,7 +4,8 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from django.forms.formsets import BaseFormSet
-from .models import Cooperative, CooperativeMember, CooperativeMeeting
+from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion, REGULAR_QUESTIONS, \
+    IRREGULAR_INTRAMURAL_QUESTIONS, IRREGULAR_EXTRAMURAL_QUESTIONS
 
 
 class UserRegisterForm(UserCreationForm):
@@ -117,3 +118,36 @@ class CooperativeMeetingTypeFormatForm(forms.ModelForm):
     class Meta:
         model = CooperativeMeeting
         fields = ['meeting_type', 'meeting_format']
+
+class RegularQuestionsForm(forms.ModelForm):
+
+    questions = forms.CharField(label='Вопросы, которые можно рассматривать на очередном собрании:',
+                                widget=forms.CheckboxSelectMultiple(choices=REGULAR_QUESTIONS))
+    additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную')
+    additional_question.disabled = True
+
+    class Meta:
+        model = CooperativeMeeting
+        fields = ['questions']
+
+class IrregularIntramuralQuestionsForm(forms.ModelForm):
+
+    questions = forms.CharField(label='Вопросы, которые можно рассматривать на внеочередном очном собрании:',
+                                widget=forms.CheckboxSelectMultiple(choices=IRREGULAR_INTRAMURAL_QUESTIONS))
+    additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную')
+    additional_question.disabled = True
+
+    class Meta:
+        model = CooperativeMeeting
+        fields = ['questions']
+
+class IrregularExtramuralQuestionsForm(forms.ModelForm):
+
+    questions = forms.CharField(label='Вопросы, которые можно рассматривать на внеочередном заочном собрании:',
+                                widget=forms.CheckboxSelectMultiple(choices=IRREGULAR_EXTRAMURAL_QUESTIONS))
+    additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную')
+    additional_question.disabled = True
+
+    class Meta:
+        model = CooperativeMeeting
+        fields = ['questions']
