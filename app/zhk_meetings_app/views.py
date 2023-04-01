@@ -117,9 +117,19 @@ def cooperative_members_data(request):
                 if fio and email_address:
                     new_members.append(CooperativeMember(cooperative=cooperative, fio=fio, email_address=email_address))
 
-            # TODO Add request.FILES check
-            # TODO File parser
+            # Request.FILES check
+            # File parser
+            if request.FILES:
+                fio_email_list = str(request.FILES['members_file'].read(), 'UTF-8').split(';')
+                                 
+                for member in fio_email_list:
+                    fio_email = member.split(':')
+                    fio = fio_email[0]
+                    email_address = fio_email[1]
 
+                    if fio and email_address:
+                        new_members.append(CooperativeMember(cooperative=cooperative, fio=fio, email_address=email_address))
+                       
             try:
                 with transaction.atomic():
                     CooperativeMember.objects.filter(cooperative=cooperative).delete()
