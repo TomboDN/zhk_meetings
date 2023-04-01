@@ -14,7 +14,8 @@ MEETING_FORMATS = [
 ]
 
 MEETING_STAGES = [
-    ('type-format', 'Выбор типа и формата'),
+    ('type', 'Выбор типа'),
+    ('format', 'Выбор формата'),
     ('questions', 'Выбор вопросов'),
     ('preparation', 'Стадия подготовки'),
     ('conducting', 'Стадия проведения'),
@@ -94,6 +95,7 @@ IRREGULAR_EXTRAMURAL_QUESTIONS = [
         ('fund-planning', 'Определение порядка формирования фондов кооператива, за исключением паевого фонда кооператива, и их использования'),
 ]
 
+
 class Cooperative(models.Model):
     cooperative_user = models.ForeignKey(User, on_delete=models.CASCADE)
     cooperative_name = models.CharField(max_length=255)
@@ -125,5 +127,10 @@ class CooperativeMeeting(models.Model):
     meeting_type = models.CharField(max_length=9, choices=MEETING_TYPES)
     meeting_format = models.CharField(max_length=10, choices=MEETING_FORMATS)
     questions = models.ManyToManyField(CooperativeQuestion)
-    meeting_stage = models.CharField(max_length=15, choices=MEETING_STAGES)
+    meeting_stage = models.CharField(max_length=15, choices=MEETING_STAGES, default='type')
     last = models.BooleanField()
+    date = models.DateField(null=True)
+    time = models.TimeField(null=True)
+    place = models.CharField(max_length=255)
+
+

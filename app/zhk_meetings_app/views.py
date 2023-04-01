@@ -5,8 +5,9 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
-    BaseMemberFormSet, CooperativeMeetingTypeFormatForm, RegularQuestionsForm, IrregularExtramuralQuestionsForm, \
-    IrregularIntramuralQuestionsForm
+    BaseMemberFormSet, RegularQuestionsForm, IrregularExtramuralQuestionsForm, \
+    IrregularIntramuralQuestionsForm, IntramuralPreparationForm, CooperativeMeetingTypeForm, \
+    CooperativeMeetingFormatForm, ExtramuralPreparationForm
 from .models import Cooperative, CooperativeMember, CooperativeMeeting
 
 
@@ -105,7 +106,7 @@ def cooperative_members_data(request):
                 chairman_name=cooperative_members_form.cleaned_data.get('chairman_name'),
                 auditor_name=cooperative_members_form.cleaned_data.get('auditor_name'),
                 auditor_email_address=cooperative_members_form.cleaned_data.get('auditor_email_address'),
-                ))
+            ))
 
             new_members = []
 
@@ -152,22 +153,48 @@ def cooperative_members_data(request):
 
 def cooperative_meeting_new(request):
     if request.method == "POST":
-        form = CooperativeMeetingTypeFormatForm(request.POST)
+        form = CooperativeMeetingTypeForm(request.POST)
         if form.is_valid():
-            cooperative = Cooperative.objects.filter(cooperative_user=request.user).first()
-            obj, created = CooperativeMeeting.objects.update_or_create(cooperative=cooperative, defaults=dict(
-                meeting_type=form.cleaned_data.get('meeting_type'),
-                meeting_format=form.cleaned_data.get('meeting_format'),
-                meeting_stage='questions',
-                last=True
-            ))
-            messages.info(request, f"Обновление {created}")
-            return redirect('/questions')
+            meeting_type = form.cleaned_data.get('meeting_type')
+            cooperative = Cooperative.objects.get(cooperative_user=request.user)
+            if meeting_type == 'regular':
+                obj = CooperativeMeeting.objects.create(cooperative=cooperative,
+                                                        meeting_type=meeting_type,
+                                                        meeting_stage='questions',
+                                                        last=True
+                                                        )
+                return redirect('/meeting_questions/' + str(obj.id))
+            elif meeting_type == 'irregular':
+                obj = CooperativeMeeting.objects.create(cooperative=cooperative,
+                                                        meeting_type=meeting_type,
+                                                        meeting_stage='format',
+                                                        last=True
+                                                        )
+                return redirect('/meeting_format/' + str(obj.id))
         else:
-            messages.error(request, "Ошибки в полях.")
             return redirect('/meeting_new')
-    form = CooperativeMeetingTypeFormatForm()
-    return render(request=request, template_name="meeting_data/meeting_new.html", context={"form": form})
+    form = CooperativeMeetingTypeForm()
+    return render(request=request, template_name="meeting_data/meeting_type.html", context={"form": form})
+
+
+def meeting_format_request(request, meeting_id):
+    if request.method == "POST":
+        form = CooperativeMeetingFormatForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    meeting.meeting_format = form.cleaned_data.get('meeting_format')
+                    meeting.meeting_stage = 'questions'
+                    meeting.save()
+                    return redirect('/dashboard')
+
+            except IntegrityError:
+                return redirect('/meeting_format/' + str(meeting_id))
+        else:
+            return redirect('/meeting_format/' + str(meeting_id))
+    form = CooperativeMeetingFormatForm()
+    return render(request=request, template_name="meeting_data/meeting_format.html", context={"form": form})
 
 
 def regular_questions(request):
@@ -228,3 +255,76 @@ def irregular_extramural_questions(request):
             return redirect('/irregular_extramural_questions')
     form = IrregularExtramuralQuestionsForm()
     return render(request=request, template_name="meeting_data/questions.html", context={"form": form})
+
+
+def meeting_preparation(request, meeting_id):
+    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    if meeting.meeting_type == "regular":
+        title = "Стадия подготовки очередного собрания"
+        form = IntramuralPreparationForm()
+    elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
+        title = "Стадия подготовки внеочередного очного собрания"
+        form = IntramuralPreparationForm()
+    else:
+        title = "Стадия подготовки внеочередного заочного собрания"
+        form = ExtramuralPreparationForm()
+
+    if request.method == "POST":
+        if meeting.meeting_type == "regular":
+            form = IntramuralPreparationForm(request.POST)
+        elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
+            form = IntramuralPreparationForm(request.POST)
+        else:
+            form = ExtramuralPreparationForm(request.POST)
+        if form.is_valid():
+            meeting = CooperativeMeeting.objects.get(id=meeting_id)
+            if meeting.meeting_type == "regular":
+                try:
+                    with transaction.atomic():
+                        meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                        meeting.date = form.cleaned_data.get('date')
+                        meeting.time = form.cleaned_data.get('time')
+                        meeting.place = form.cleaned_data.get('place')
+                        meeting.save()
+
+                except IntegrityError:
+                    return redirect('/meeting_preparation/' + str(meeting_id))
+
+            elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
+                try:
+                    with transaction.atomic():
+                        meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                        meeting.date = form.cleaned_data.get('date')
+                        meeting.time = form.cleaned_data.get('time')
+                        meeting.place = form.cleaned_data.get('place')
+                        meeting.save()
+
+                except IntegrityError:
+                    return redirect('/meeting_preparation/' + str(meeting_id))
+            else:
+                try:
+                    with transaction.atomic():
+                        meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                        meeting.date = form.cleaned_data.get('date')
+                        meeting.time = form.cleaned_data.get('time')
+                        meeting.save()
+
+                except IntegrityError:
+                    return redirect('/meeting_preparation/' + str(meeting_id))
+
+            if 'create_notification' in request.POST:
+                ...  # TODO create_notification(meeting)
+
+            elif 'save_and_continue' in request.POST:
+                files = request.FILES.getlist('appendix')
+                for f in files:
+                    ...  # TODO
+
+                return redirect('/dashboard')
+
+        else:
+            messages.error(request, "Ошибки в полях.")
+            return redirect('/intramural_preparation')
+
+    return render(request=request, template_name="meeting_data/meeting_preparation.html",
+                  context={"form": form, "title": title})

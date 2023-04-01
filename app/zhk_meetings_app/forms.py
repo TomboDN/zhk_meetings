@@ -102,25 +102,33 @@ class BaseMemberFormSet(BaseFormSet):
                     )
 
 
-class CooperativeMeetingTypeFormatForm(forms.ModelForm):
+class CooperativeMeetingTypeForm(forms.ModelForm):
     MEETING_TYPES = [
         ('regular', 'Очередное'),
         ('irregular', 'Внеочередное')
     ]
+
+    meeting_type = forms.CharField(label='Вид собрания', widget=forms.RadioSelect(choices=MEETING_TYPES))
+
+    class Meta:
+        model = CooperativeMeeting
+        fields = ['meeting_type']
+
+
+class CooperativeMeetingFormatForm(forms.ModelForm):
     MEETING_FORMATS = [
         ('intramural', 'Очное'),
         ('extramural', 'Заочное')
     ]
 
-    meeting_type = forms.CharField(label='Вид собрания', widget=forms.RadioSelect(choices=MEETING_TYPES))
     meeting_format = forms.CharField(label='Формат собрания', widget=forms.RadioSelect(choices=MEETING_FORMATS))
 
     class Meta:
         model = CooperativeMeeting
-        fields = ['meeting_type', 'meeting_format']
+        fields = ['meeting_format']
+
 
 class RegularQuestionsForm(forms.ModelForm):
-
     questions = forms.CharField(label='Вопросы, которые можно рассматривать на очередном собрании:',
                                 widget=forms.CheckboxSelectMultiple(choices=REGULAR_QUESTIONS))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную')
@@ -130,8 +138,8 @@ class RegularQuestionsForm(forms.ModelForm):
         model = CooperativeMeeting
         fields = ['questions']
 
-class IrregularIntramuralQuestionsForm(forms.ModelForm):
 
+class IrregularIntramuralQuestionsForm(forms.ModelForm):
     questions = forms.CharField(label='Вопросы, которые можно рассматривать на внеочередном очном собрании:',
                                 widget=forms.CheckboxSelectMultiple(choices=IRREGULAR_INTRAMURAL_QUESTIONS))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную')
@@ -141,8 +149,8 @@ class IrregularIntramuralQuestionsForm(forms.ModelForm):
         model = CooperativeMeeting
         fields = ['questions']
 
-class IrregularExtramuralQuestionsForm(forms.ModelForm):
 
+class IrregularExtramuralQuestionsForm(forms.ModelForm):
     questions = forms.CharField(label='Вопросы, которые можно рассматривать на внеочередном заочном собрании:',
                                 widget=forms.CheckboxSelectMultiple(choices=IRREGULAR_EXTRAMURAL_QUESTIONS))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную')
@@ -151,3 +159,30 @@ class IrregularExtramuralQuestionsForm(forms.ModelForm):
     class Meta:
         model = CooperativeMeeting
         fields = ['questions']
+
+
+class IntramuralPreparationForm(forms.ModelForm):
+    date = forms.DateField(label='Дата')
+    time = forms.TimeField(label='Время')
+    place = forms.CharField(label='Место')
+    appendix = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
+                               help_text='Загрузите в поле необходимые приложения к Уведомлению в формате (?). '
+                                         'Название файла должно соответствовать содержанию документа. Приложения '
+                                         'будут направлены членам кооператива вместе с Уведомлением.')
+
+    class Meta:
+        model = CooperativeMeeting
+        fields = ['date', 'time', 'place']
+
+
+class ExtramuralPreparationForm(forms.ModelForm):
+    date = forms.DateField(label='Дата окончания приема бюллетеней')
+    time = forms.TimeField(label='Время окончания приема бюллетеней')
+    appendix = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
+                               help_text='Загрузите в поле необходимые приложения к Уведомлению в формате (?). '
+                                         'Название файла должно соответствовать содержанию документа. Приложения '
+                                         'будут направлены членам кооператива вместе с Уведомлением.')
+
+    class Meta:
+        model = CooperativeMeeting
+        fields = ['date', 'time']
