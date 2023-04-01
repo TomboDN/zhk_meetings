@@ -131,7 +131,7 @@ class CooperativeMeetingFormatForm(forms.ModelForm):
 class RegularQuestionsForm(forms.ModelForm):
     questions = forms.CharField(label='Вопросы, которые можно рассматривать на очередном собрании:',
                                 widget=forms.CheckboxSelectMultiple(choices=REGULAR_QUESTIONS))
-    additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную')
+    additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
 
     class Meta:
@@ -139,10 +139,10 @@ class RegularQuestionsForm(forms.ModelForm):
         fields = ['questions']
 
 
-class IrregularIntramuralQuestionsForm(forms.ModelForm):
+class IntramuralQuestionsForm(forms.ModelForm):
     questions = forms.CharField(label='Вопросы, которые можно рассматривать на внеочередном очном собрании:',
                                 widget=forms.CheckboxSelectMultiple(choices=IRREGULAR_INTRAMURAL_QUESTIONS))
-    additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную')
+    additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
 
     class Meta:
@@ -150,10 +150,10 @@ class IrregularIntramuralQuestionsForm(forms.ModelForm):
         fields = ['questions']
 
 
-class IrregularExtramuralQuestionsForm(forms.ModelForm):
+class ExtramuralQuestionsForm(forms.ModelForm):
     questions = forms.CharField(label='Вопросы, которые можно рассматривать на внеочередном заочном собрании:',
                                 widget=forms.CheckboxSelectMultiple(choices=IRREGULAR_EXTRAMURAL_QUESTIONS))
-    additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную')
+    additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
 
     class Meta:
