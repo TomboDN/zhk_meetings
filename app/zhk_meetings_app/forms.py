@@ -4,6 +4,8 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from django.forms.formsets import BaseFormSet
+from phonenumber_field.widgets import RegionalPhoneNumberWidget
+
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion, REGULAR_QUESTIONS, \
     IRREGULAR_INTRAMURAL_QUESTIONS, IRREGULAR_EXTRAMURAL_QUESTIONS
 
@@ -37,7 +39,8 @@ class CooperativeDataForm(forms.Form):
     cooperative_itn = forms.CharField(label='ИНН', help_text='Можно узнать на сайте ФНС (www.nalog.gov.ru)')
     cooperative_address = forms.CharField(label='Адрес ЖК/ЖСК', help_text='Сведения содержатся в Уставе ЖК/ЖСК')
     cooperative_email_address = forms.EmailField(label='Эл.почта ЖК/ЖСК', widget=forms.EmailInput)
-    cooperative_telephone_number = PhoneNumberField(label='Номер телефона')
+    cooperative_telephone_number = PhoneNumberField(label='Номер телефона', region="RU",
+                                                    widget=RegionalPhoneNumberWidget(region="RU"))
 
     class Meta:
         model = Cooperative
@@ -162,10 +165,10 @@ class ExtramuralQuestionsForm(forms.ModelForm):
 
 
 class IntramuralPreparationForm(forms.ModelForm):
-    date = forms.DateField(label='Дата')
-    time = forms.TimeField(label='Время')
+    date = forms.DateField(label='Дата', widget=forms.NumberInput(attrs={'type': 'date'}))
+    time = forms.TimeField(label='Время', widget=forms.TimeInput(attrs={'type': 'time'}))
     place = forms.CharField(label='Место')
-    appendix = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
+    appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True}),
                                help_text='Загрузите в поле необходимые приложения к Уведомлению в формате (?). '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
                                          'будут направлены членам кооператива вместе с Уведомлением.')
@@ -176,9 +179,9 @@ class IntramuralPreparationForm(forms.ModelForm):
 
 
 class ExtramuralPreparationForm(forms.ModelForm):
-    date = forms.DateField(label='Дата окончания приема бюллетеней')
-    time = forms.TimeField(label='Время окончания приема бюллетеней')
-    appendix = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
+    date = forms.DateField(label='Дата окончания приема бюллетеней', widget=forms.NumberInput(attrs={'type': 'date'}))
+    time = forms.TimeField(label='Время окончания приема бюллетеней', widget=forms.TimeInput(attrs={'type': 'time'}))
+    appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True}),
                                help_text='Загрузите в поле необходимые приложения к Уведомлению в формате (?). '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
                                          'будут направлены членам кооператива вместе с Уведомлением.')

@@ -1,9 +1,12 @@
+from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
 from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
+
+from emails import send_notification
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
     IntramuralQuestionsForm, IntramuralPreparationForm, CooperativeMeetingTypeForm, \
@@ -53,10 +56,12 @@ def home(request):
     return render(request=request, template_name="home.html")
 
 
+@login_required
 def dashboard(request):
     return render(request=request, template_name="dashboard.html")
 
 
+@login_required
 def cooperative_main_data(request):
     cooperative = Cooperative.objects.filter(cooperative_user=request.user).first()
     if request.method == "POST":
@@ -87,6 +92,7 @@ def cooperative_main_data(request):
     return render(request=request, template_name="cooperative_data/main_data.html", context={"form": form})
 
 
+@login_required
 def cooperative_members_data(request):
     user = request.user
     cooperative = Cooperative.objects.filter(cooperative_user=user).first()
@@ -121,15 +127,16 @@ def cooperative_members_data(request):
             # File parser
             if request.FILES:
                 fio_email_list = str(request.FILES['members_file'].read(), 'UTF-8').split(';')
-                                 
+
                 for member in fio_email_list:
                     fio_email = member.split(':')
                     fio = fio_email[0]
                     email_address = fio_email[1]
 
                     if fio and email_address:
-                        new_members.append(CooperativeMember(cooperative=cooperative, fio=fio, email_address=email_address))
-                       
+                        new_members.append(
+                            CooperativeMember(cooperative=cooperative, fio=fio, email_address=email_address))
+
             try:
                 with transaction.atomic():
                     CooperativeMember.objects.filter(cooperative=cooperative).delete()
@@ -161,6 +168,7 @@ def cooperative_members_data(request):
     return render(request, 'cooperative_data/members_data.html', context)
 
 
+@login_required
 def cooperative_meeting_new(request):
     if request.method == "POST":
         form = CooperativeMeetingTypeForm(request.POST)
@@ -187,6 +195,7 @@ def cooperative_meeting_new(request):
     return render(request=request, template_name="meeting_data/meeting_type.html", context={"form": form})
 
 
+@login_required
 def meeting_format_request(request, meeting_id):
     if request.method == "POST":
         form = CooperativeMeetingFormatForm(request.POST)
@@ -207,6 +216,7 @@ def meeting_format_request(request, meeting_id):
     return render(request=request, template_name="meeting_data/meeting_format.html", context={"form": form})
 
 
+@login_required
 def meeting_questions(request, meeting_id):
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
     if meeting.meeting_type == "regular":
@@ -228,7 +238,7 @@ def meeting_questions(request, meeting_id):
             try:
                 with transaction.atomic():
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
-                    #meeting.questions = form.cleaned_data.get('questions')
+                    # meeting.questions = form.cleaned_data.get('questions')
                     meeting.save()
                     return redirect('/meeting_preparation/' + str(meeting_id))
 
@@ -241,6 +251,7 @@ def meeting_questions(request, meeting_id):
     return render(request=request, template_name="meeting_data/meeting_questions.html", context={"form": form})
 
 
+@login_required
 def meeting_preparation(request, meeting_id):
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
     if meeting.meeting_type == "regular":
@@ -249,7 +260,7 @@ def meeting_preparation(request, meeting_id):
     elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
         title = "Стадия подготовки внеочередного очного собрания"
         form = IntramuralPreparationForm()
-    else:
+    elif meeting.meeting_type == "irregular" and meeting.meeting_format == "extramural":
         title = "Стадия подготовки внеочередного заочного собрания"
         form = ExtramuralPreparationForm()
 
@@ -258,11 +269,13 @@ def meeting_preparation(request, meeting_id):
             form = IntramuralPreparationForm(request.POST)
         elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
             form = IntramuralPreparationForm(request.POST)
-        else:
+        elif meeting.meeting_type == "irregular" and meeting.meeting_format == "extramural":
             form = ExtramuralPreparationForm(request.POST)
+
         if form.is_valid():
             meeting = CooperativeMeeting.objects.get(id=meeting_id)
-            if meeting.meeting_type == "regular":
+            if meeting.meeting_type == "regular" or (
+                    meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural"):
                 try:
                     with transaction.atomic():
                         meeting = CooperativeMeeting.objects.get(id=meeting_id)
@@ -274,18 +287,7 @@ def meeting_preparation(request, meeting_id):
                 except IntegrityError:
                     return redirect('/meeting_preparation/' + str(meeting_id))
 
-            elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
-                try:
-                    with transaction.atomic():
-                        meeting = CooperativeMeeting.objects.get(id=meeting_id)
-                        meeting.date = form.cleaned_data.get('date')
-                        meeting.time = form.cleaned_data.get('time')
-                        meeting.place = form.cleaned_data.get('place')
-                        meeting.save()
-
-                except IntegrityError:
-                    return redirect('/meeting_preparation/' + str(meeting_id))
-            else:
+            elif meeting.meeting_type == "irregular" and meeting.meeting_format == "extramural":
                 try:
                     with transaction.atomic():
                         meeting = CooperativeMeeting.objects.get(id=meeting_id)
@@ -297,17 +299,15 @@ def meeting_preparation(request, meeting_id):
                     return redirect('/meeting_preparation/' + str(meeting_id))
 
             if 'create_notification' in request.POST:
-                ...  # TODO create_notification(meeting)
+                ...  # TODO notification = create_notification(meeting)
 
             elif 'save_and_continue' in request.POST:
                 files = request.FILES.getlist('appendix')
-                for f in files:
-                    ...  # TODO
+                send_notification(meeting, files)
 
                 return redirect('/dashboard')
 
         else:
-            messages.error(request, "Ошибки в полях.")
             return redirect('/intramural_preparation')
 
     return render(request=request, template_name="meeting_data/meeting_preparation.html",
