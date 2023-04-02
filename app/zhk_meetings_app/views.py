@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
 
+from doc import docs_filling
 from emails import send_notification
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
@@ -377,6 +378,7 @@ def meeting_requirement_approval(request, meeting_id):
 @login_required
 def meeting_preparation(request, meeting_id):
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    cooperative_members = CooperativeMember.objects.filter(cooperative=meeting.cooperative).order_by('email_address')
     if meeting.meeting_type == "regular":
         title = "Стадия подготовки очередного собрания"
         form = IntramuralPreparationForm()
@@ -421,11 +423,19 @@ def meeting_preparation(request, meeting_id):
                 except IntegrityError:
                     return redirect('/meeting_preparation/' + str(meeting_id))
 
+            files = request.FILES.getlist('appendix')
+                
             if 'create_notification' in request.POST:
-                ...  # TODO notification = create_notification(meeting)
+                # TODO notification = create_notification(meeting)
+                notification_number = 1
+                for member in cooperative_members:
+                    docs_filling(meeting.meeting_type, meeting.meeting_format, notification_number, member.fio, meeting, files)
+                    notification_number += 1 
+
+                return redirect('/dashboard')
 
             elif 'save_and_continue' in request.POST:
-                files = request.FILES.getlist('appendix')
+                #files = request.FILES.getlist('appendix')
                 send_notification(meeting, files)
 
                 return redirect('/dashboard')
