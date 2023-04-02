@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <section class="py-4 py-xl-5" style="height: 377.725px;">
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-8 col-lg-6 col-xl-5 col-xxl-5">
+                    <div class="card mb-5">
+                        <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
+                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Принятие решения о
+                                проведении собрания</h2>
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    {{ form.conduct_decision|as_crispy_field }}
+                                </div>
+                                <div id="reasonDiv" class="mb-3" style="display: none">
+                                    {{ form.conduct_reason|as_crispy_field }}
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary d-block w-100" name="create_decision"
+                                            id="create_decision" type="submit" style="margin-top: 40px; margin-bottom: 30px;">
+                                        Сформировать Решение
+                                    </button>
+                                    <button class="btn btn-primary d-block w-100" name="continue" id="continue"
+                                            type="submit">
+                                        Отправить решение и перейти далее
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        function check() {
+            if (document.getElementById("id_conduct_decision_1").checked) {
+                document.getElementById("reasonDiv").style.display = "block";
+            } else {
+                document.getElementById("reasonDiv").style.display = "none";
+            }
+        }
+    </script>
+{% endblock content %}

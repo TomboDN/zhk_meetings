@@ -14,6 +14,10 @@ fi
 find ./zhk_meetings_app/migrations -type f -not -name '__init__.py' -delete
 sleep 1
 
+export PGPASSWORD=$SQL_PASSWORD 
+
+psql -d postgres -U zhk_meetings -h $SQL_HOST -p $SQL_PORT -c 'drop database zhk_db;' -c 'create database zhk_db;'
+
 python manage.py flush --no-input
 python manage.py makemigrations
 python manage.py migrate

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <section class="py-4 py-xl-5" style="height: 377.725px;">
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <div class="col-auto">
+                    <div class="card mb-5">
+                        <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
+                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Требование о
+                                проведении собрания (для внеочередных собраний)</h2>
+                            <form method="post">
+                                {% csrf_token %}
+
+                                {{ form.initiator|as_crispy_field }}
+                                {% if form.initiator.errors %}
+                                    {% for error in form.initiator.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+
+                                {{ form.reason|as_crispy_field }}
+                                {% if form.reason.errors %}
+                                    {% for error in form.reason.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+                                <div id="members" style="display: none;">
+                                    {{ member_representative_formset.management_form }}
+
+                                {% for member_representative_form in member_representative_formset %}
+
+                                    <div class="member-formset d-flex flex-row justify-content-center align-items-center align-content-center">
+                                        {{ member_representative_form.cooperative_member_id.as_hidden }}
+
+                                        {{ member_representative_form.cooperative_member|as_crispy_field }}
+                                        {% if member_representative_form.cooperative_member.errors %}
+                                            {% for error in member_representative_form.cooperative_member.errors %}
+                                                {{ error|escape }}
+                                            {% endfor %}
+                                        {% endif %}
+
+                                        {{ member_representative_form.representatives_request|as_crispy_field }}
+                                        {% if member_representative_form.representatives_request.errors %}
+                                            {% for error in member_representative_form.representatives_request.errors %}
+                                                {{ error|escape }}
+                                            {% endfor %}
+                                        {% endif %}
+
+                                        {{ member_representative_form.representative|as_crispy_field }}
+                                        {% if member_representative_form.representative.errors %}
+                                            {% for error in member_representative_form.representative.errors %}
+                                                {{ error|escape }}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+
+                                {% if member_representative_formset.non_form_errors %}
+                                    {% for error in member_representative_formset.non_form_errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+                                </div>
+                                <button class="btn btn-primary d-block w-100" id="submit" type="submit">
+                                    Сохранить и продолжить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        function check() {
+            console.log(document.getElementById("id_initiator").value)
+            if (document.getElementById("id_initiator").value == 'members') {
+                document.getElementById("members").style.display = "block";
+            } else {
+                document.getElementById("members").style.display = "none";
+            }
+        }
+    </script>
+{% endblock content %}

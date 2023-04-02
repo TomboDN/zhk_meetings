@@ -22,6 +22,12 @@ MEETING_STAGES = [
     ('decision-making', 'Стадия принятия решения'),
 ]
 
+INITIATORS = [
+        ('chairman', 'Правление кооператива'),
+        ('auditor', 'Ревизионная комиссия / ревизор'),
+        ('members', 'Члены кооператива')
+    ]
+
 REGULAR_QUESTIONS = [
         ('statute-approval', 'Утверждение устава кооператива'),
         ('statute-changes', 'Внесение изменений в устав кооператива'),
@@ -113,6 +119,9 @@ class CooperativeMember(models.Model):
     fio = models.CharField(max_length=255)
     email_address = models.EmailField()
 
+    def __str__(self):
+        return self.fio
+
 
 class CooperativeQuestion(models.Model):
     question = models.CharField(max_length=255)
@@ -128,9 +137,17 @@ class CooperativeMeeting(models.Model):
     meeting_format = models.CharField(max_length=10, choices=MEETING_FORMATS)
     questions = models.ManyToManyField(CooperativeQuestion)
     meeting_stage = models.CharField(max_length=15, choices=MEETING_STAGES, default='type')
-    last = models.BooleanField()
+    initiator = models.CharField(max_length=30, choices=INITIATORS)
+    reason = models.TextField()
+    conduct_decision = models.BooleanField(null=True)
+    conduct_reason = models.CharField(max_length=255)
     date = models.DateField(null=True)
     time = models.TimeField(null=True)
     place = models.CharField(max_length=255)
 
+
+class CooperativeMemberRepresentative(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    cooperative_member = models.ForeignKey(CooperativeMember, on_delete=models.CASCADE)
+    representative = models.CharField(max_length=255)
 

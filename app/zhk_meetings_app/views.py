@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
-from django.forms import formset_factory
+from django.forms import formset_factory, BaseFormSet
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
@@ -10,8 +11,9 @@ from emails import send_notification
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
     IntramuralQuestionsForm, IntramuralPreparationForm, CooperativeMeetingTypeForm, \
-    CooperativeMeetingFormatForm, ExtramuralPreparationForm
-from .models import Cooperative, CooperativeMember, CooperativeMeeting
+    CooperativeMeetingFormatForm, ExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
+    MemberRepresentativeForm
+from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberRepresentative
 
 
 def register_request(request):
@@ -74,7 +76,7 @@ def cooperative_main_data(request):
                 cooperative_email_address=form.cleaned_data.get('cooperative_email_address'),
                 cooperative_telephone_number=form.cleaned_data.get('cooperative_telephone_number')))
             messages.info(request, f"Обновление {created}")
-            return redirect('/')
+            return redirect('/dashboard')
         else:
             messages.error(request, "Ошибки в полях.")
 
@@ -142,11 +144,9 @@ def cooperative_members_data(request):
                     CooperativeMember.objects.filter(cooperative=cooperative).delete()
                     CooperativeMember.objects.bulk_create(new_members)
 
-                    messages.success(request, 'Вы обновили данные о членах кооператива.')
                     return redirect('/dashboard')
 
             except IntegrityError:
-                messages.error(request, 'Ошибка сохранения данных о членах кооператива.')
                 return redirect(reverse('members_data'))
 
     else:
@@ -179,14 +179,12 @@ def cooperative_meeting_new(request):
                 obj = CooperativeMeeting.objects.create(cooperative=cooperative,
                                                         meeting_type=meeting_type,
                                                         meeting_stage='questions',
-                                                        last=True
                                                         )
                 return redirect('/meeting_questions/' + str(obj.id))
             elif meeting_type == 'irregular':
                 obj = CooperativeMeeting.objects.create(cooperative=cooperative,
                                                         meeting_type=meeting_type,
                                                         meeting_stage='format',
-                                                        last=True
                                                         )
                 return redirect('/meeting_format/' + str(obj.id))
         else:
@@ -249,6 +247,131 @@ def meeting_questions(request, meeting_id):
             return redirect('/meeting_questions/' + str(meeting_id))
 
     return render(request=request, template_name="meeting_data/meeting_questions.html", context={"form": form})
+
+
+@login_required
+def meeting_requirement_initiator_reason(request, meeting_id):
+    cooperative = Cooperative.objects.get(cooperative_user=request.user)
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    if cooperative_meeting.meeting_type == 'regular':
+        return redirect('/meeting_preparation/' + str(meeting_id))
+    members_representatives_form_set = formset_factory(MemberRepresentativeForm, formset=BaseFormSet, extra=0)
+
+    cooperative_members = CooperativeMember.objects.filter(cooperative=cooperative)
+    member_data = [{'cooperative_member_id': x.id, 'cooperative_member': x.fio}
+                   for x in cooperative_members]
+    if request.method == "POST":
+        form = MeetingRequirementInitiatorReasonFrom(request.POST)
+        member_representative_formset = members_representatives_form_set(request.POST)
+
+        if form.is_valid() and form.cleaned_data.get('initiator') != 'members':
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    meeting.initiator = form.cleaned_data.get('initiator')
+                    meeting.reason = form.cleaned_data.get('reason')
+                    # meeting.meeting_stage = 'questions'
+                    meeting.save()
+                    return redirect('/meeting_requirement_creation/' + str(meeting_id))
+            except IntegrityError:
+                return redirect('/meeting_requirement_initiator_reason/' + str(meeting_id))
+
+        if form.is_valid() and member_representative_formset.is_valid():
+            represented_members = []
+
+            for member_representative_form in member_representative_formset:
+                cooperative_member = CooperativeMember.objects.get(
+                    id=member_representative_form.cleaned_data.get('cooperative_member_id'))
+                representatives_request = member_representative_form.cleaned_data.get('representatives_request')
+                representative = member_representative_form.cleaned_data.get('representative')
+
+                if cooperative_member and representative and representatives_request == True:
+                    represented_members.append(CooperativeMemberRepresentative(cooperative_meeting=cooperative_meeting,
+                                                                               cooperative_member=cooperative_member,
+                                                                               representative=representative))
+
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    meeting.initiator = form.cleaned_data.get('initiator')
+                    meeting.reason = form.cleaned_data.get('reason')
+                    # meeting.meeting_stage = 'questions'
+                    meeting.save()
+                    CooperativeMemberRepresentative.objects.bulk_create(represented_members)
+                    return redirect('/meeting_requirement_creation/' + str(meeting_id))
+
+            except IntegrityError:
+                return redirect('/meeting_requirement_initiator_reason/' + str(meeting_id))
+        else:
+            return redirect('/meeting_requirement_initiator_reason/' + str(meeting_id))
+    else:
+        member_representative_formset = members_representatives_form_set(initial=member_data)
+    form = MeetingRequirementInitiatorReasonFrom()
+    context = {
+        'form': form,
+        'member_representative_formset': member_representative_formset,
+    }
+
+    return render(request=request, template_name="meeting_data/meeting_initiator_reason.html", context=context)
+
+
+@login_required
+def meeting_requirement_creation(request, meeting_id):
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    if cooperative_meeting.meeting_type == 'regular':
+        return redirect('/meeting_preparation/' + str(meeting_id))
+    if request.method == "POST":
+        if 'create_requirement' in request.POST:
+            requirement = None
+            ...  # TODO requirement = create_requirement(meeting)
+            response = HttpResponse(requirement, content_type='application/octet-stream')
+            response['Content-Disposition'] = f'attachment; filename="Требование о проведении собрания"'
+            return response
+
+        elif 'continue' in request.POST:
+            return redirect('/meeting_requirement_approval/' + str(meeting_id))
+    return render(request=request, template_name="meeting_data/meeting_requirement_creation.html", context={})
+
+
+@login_required
+def meeting_requirement_approval(request, meeting_id):
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    if cooperative_meeting.meeting_type == 'regular':
+        return redirect('/meeting_preparation/' + str(meeting_id))
+    if request.method == "POST":
+        form = MeetingApprovalForm(request.POST)
+        if form.is_valid():
+            conduct_decision = form.cleaned_data.get('conduct_decision')
+            conduct_reason = form.cleaned_data.get('conduct_reason')
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    meeting.conduct_decision = conduct_decision
+                    meeting.conduct_reason = conduct_reason
+                    # meeting.meeting_stage = 'questions'
+                    meeting.save()
+
+            except IntegrityError:
+                return redirect('/meeting_requirement_approval/' + str(meeting_id))
+
+            if 'create_decision' in request.POST:
+                decision = None
+                ...  # TODO decision = create_decision(meeting, choice, reason)
+                response = HttpResponse(decision, content_type='application/octet-stream')
+                response['Content-Disposition'] = f'attachment; filename="Решение о проведении собрания"'
+                return response
+
+            elif 'continue' in request.POST:
+                if conduct_decision == "True":
+                    # TODO SEND decision
+                    return redirect('/meeting_preparation/' + str(meeting_id))
+                else:
+                    return redirect('/dashboard/')
+        else:
+            return redirect('/meeting_requirement_approval/' + str(meeting_id))
+    form = MeetingApprovalForm()
+    return render(request=request, template_name="meeting_data/meeting_requirement_approval.html",
+                  context={"form": form})
 
 
 @login_required

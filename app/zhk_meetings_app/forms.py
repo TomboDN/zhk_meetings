@@ -7,7 +7,7 @@ from django.forms.formsets import BaseFormSet
 from phonenumber_field.widgets import RegionalPhoneNumberWidget
 
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion, REGULAR_QUESTIONS, \
-    IRREGULAR_INTRAMURAL_QUESTIONS, IRREGULAR_EXTRAMURAL_QUESTIONS
+    IRREGULAR_INTRAMURAL_QUESTIONS, IRREGULAR_EXTRAMURAL_QUESTIONS, CooperativeMemberRepresentative
 
 
 class UserRegisterForm(UserCreationForm):
@@ -164,6 +164,47 @@ class ExtramuralQuestionsForm(forms.ModelForm):
         fields = ['questions']
 
 
+class MeetingRequirementInitiatorReasonFrom(forms.ModelForm):
+    INITIATORS = [
+        ('chairman', 'Правление кооператива'),
+        ('auditor', 'Ревизионная комиссия / ревизор'),
+        ('members', 'Члены кооператива')
+    ]
+    initiator = forms.ChoiceField(label='Выберите инициатора', choices=INITIATORS,
+                                  widget=forms.Select(attrs={'onchange': 'check()'}))
+    reason = forms.CharField(label='Общее собрание созывается в связи с:', widget=forms.Textarea,
+                             help_text='Рекомендуется вводить сведения в творительном падеже')
+
+    class Meta:
+        model = CooperativeMeeting
+        fields = ['initiator', 'reason']
+
+
+class MemberRepresentativeForm(forms.Form):
+    cooperative_member_id = forms.IntegerField()
+    cooperative_member = forms.CharField(label='ФИО / наименование', widget=forms.TextInput(attrs={'readonly': 'True'}))
+    representatives_request = forms.BooleanField(label='Требование выдвигает представитель', required=False,
+                                                 initial=False)
+    representative = forms.CharField(label='ФИО представителя', required=False)
+
+
+class MeetingApprovalForm(forms.Form):
+    APPROVAL_CHOICE = [
+        ('True', 'Принять требование'),
+        ('False', 'Отклонить требование'),
+    ]
+    REASONS = [
+        ('0', 'Не соблюден предусмотренный Уставом порядок предъявления требований'),
+        ('1', 'Ни один вопрос не относится к компетенции общего собрания'),
+        ('2', 'Требование предъявлено органом, не имеющим полномочий по предъявлению требования'),
+        ('3', 'Требование подано меньшим количеством членов кооператива, чем предусмотрено Уставом'),
+    ]
+
+    conduct_decision = forms.CharField(label='Решение о проведении',
+                                       widget=forms.RadioSelect(choices=APPROVAL_CHOICE, attrs={'onclick': 'check()'}))
+    conduct_reason = forms.ChoiceField(label='Выберите основание', choices=REASONS)
+
+
 class IntramuralPreparationForm(forms.ModelForm):
     date = forms.DateField(label='Дата', widget=forms.NumberInput(attrs={'type': 'date'}))
     time = forms.TimeField(label='Время', widget=forms.TimeInput(attrs={'type': 'time'}))
@@ -171,7 +212,7 @@ class IntramuralPreparationForm(forms.ModelForm):
     appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True}),
                                help_text='Загрузите в поле необходимые приложения к Уведомлению в формате (?). '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
-                                         'будут направлены членам кооператива вместе с Уведомлением.')
+                                         'будут направлены членам кооператива вместе с Уведомлением.', required=False)
 
     class Meta:
         model = CooperativeMeeting
@@ -184,7 +225,7 @@ class ExtramuralPreparationForm(forms.ModelForm):
     appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True}),
                                help_text='Загрузите в поле необходимые приложения к Уведомлению в формате (?). '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
-                                         'будут направлены членам кооператива вместе с Уведомлением.')
+                                         'будут направлены членам кооператива вместе с Уведомлением.', required=False)
 
     class Meta:
         model = CooperativeMeeting
