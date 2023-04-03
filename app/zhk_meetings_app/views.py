@@ -265,6 +265,8 @@ def meeting_questions(request, meeting_id):
                         meeting.meeting_stage = 'question-termination'
                     elif meeting.questions.exists(question='Принятие решения о приеме граждан в члены кооператива'):
                         meeting.meeting_stage = 'question-reception'
+                    else:
+                        meeting.meeting_stage = 'preparation'
 
                     meeting.save()
                     return question_redirect(meeting_id)
