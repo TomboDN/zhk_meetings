@@ -10,6 +10,39 @@ def strings_creating(elements):
     return elements_string
 
 
+def create_requirement(meeting, cooperative_members):
+    member_name = ''
+    for member in cooperative_members:
+        member_name += member.fio + '\n'
+    
+    today_date = datetime.date.today().strftime("%d.%m.%Y")
+    
+    questions_list = meeting.questions
+    questions = []
+    for question in questions_list.all():
+        questions.append(question.question)
+    
+    questions_string = strings_creating(questions)
+
+    context = { 'member_name' : member_name,
+                'cooperative_name' : meeting.cooperative.cooperative_name,
+                'reason' : meeting.reason,
+                'questions' : questions_string,
+                'auditor_name' : meeting.cooperative.chairman_name,
+                'today_date' :  today_date }
+    
+    if meeting.format == 'intramural':
+        doc = DocxTemplate("/usr/src/app/doc/Requirement_intramural.docx")
+        context['meeting_address'] = meeting.place
+
+    else:
+        doc = DocxTemplate("/usr/src/app/doc/Requirement_extramural.docx")
+        context['meeting_address'] = meeting.place
+
+    doc.render(context)
+    doc.save('/usr/src/app/requirement.docx')
+
+    
 def docs_filling(type, format, notification_number, fio, meeting, files):
     hours = str(meeting.time).split(':')[0]
     minutes = str(meeting.time).split(':')[1]    
