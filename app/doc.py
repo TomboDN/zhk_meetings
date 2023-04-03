@@ -12,9 +12,22 @@ def strings_creating(elements):
 
 
 def create_requirement(meeting, cooperative_members):
-    member_name = ''
-    for member in cooperative_members:
-        member_name += member.fio + '\n'
+    if meeting.initiator == 'chairman':
+        name = meeting.cooperative.chairman_name
+        name_type = 'Председатель кооператива:'
+        sign_name = '________________________ ' + name
+    elif meeting.initiator == 'auditor':
+        name = meeting.cooperative.auditor_name
+        name_type = 'Ревизор / председатель ревизионной комиссии:'
+        sign_name = '________________________ ' + name
+    else:
+        name = ''
+        name_type = ''
+        sign_name = ''
+        for member in cooperative_members:
+            name += member.fio + '\n'
+            name_type += 'Член Кооператива / представитель члена Кооператива:\n'
+            sign_name += '________________________ ' + name + '\n'
     
     today_date = datetime.date.today().strftime("%d.%m.%Y")
     
@@ -25,12 +38,13 @@ def create_requirement(meeting, cooperative_members):
     
     questions_string = strings_creating(questions)
 
-    context = { 'member_name' : member_name,
+    context = { 'name' : name,
                 'cooperative_name' : meeting.cooperative.cooperative_name,
                 'reason' : meeting.reason,
                 'questions' : questions_string,
-                'auditor_name' : meeting.cooperative.chairman_name,
-                'today_date' :  today_date }
+                'today_date' : today_date,
+                'name_type' : name_type,
+                'sign_name' : sign_name }
     
     if meeting.meeting_format == 'intramural':
         doc = DocxTemplate("/usr/src/app/doc/Requirement_intramural.docx")
