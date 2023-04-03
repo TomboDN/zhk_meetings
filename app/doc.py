@@ -11,6 +11,43 @@ def strings_creating(elements):
     return elements_string
 
 
+def create_decision(meeting):
+    today_date = datetime.date.today().strftime("%d.%m.%Y")
+    
+    questions_list = meeting.questions
+    questions = []
+    for question in questions_list.all():
+        questions.append(question.question)
+    
+    questions_string = strings_creating(questions)
+
+    context = { 'cooperative_name' : meeting.cooperative.cooperative_name,
+                'cooperative_address' : meeting.cooperative.cooperative_address,
+                'cooperative_itn' : meeting.cooperative.cooperative_itn,
+                'cooperative_telephone_number' : meeting.cooperative.cooperative_telephone_number,
+                'cooperative_email_address' : meeting.cooperative.cooperative_email_address,
+                'initiator': meeting.initiator,
+                'date' : meeting.date,
+                'today_date' : today_date,
+                'chairman_name' : meeting.cooperative.chaiman_name }
+    
+    if meeting.conduct_decision == True:
+        doc = DocxTemplate("/usr/src/app/doc/Decision_1.docx")
+        context['meeting_format'] = meeting.meeting_format
+        context['questions'] = questions_string
+        
+    else:
+        doc = DocxTemplate("/usr/src/app/doc/Decision_2.docx")
+        context['conduct_reason'] = meeting.conduct_reason
+
+    doc.render(context)
+    doc.save('/usr/src/app/decision.docx')
+    file_stream = io.BytesIO()
+    doc.save(file_stream)
+    file_stream.seek(0)
+    return file_stream
+
+
 def create_requirement(meeting, cooperative_members):
     if meeting.initiator == 'chairman':
         name = meeting.cooperative.chairman_name
@@ -48,11 +85,9 @@ def create_requirement(meeting, cooperative_members):
     
     if meeting.meeting_format == 'intramural':
         doc = DocxTemplate("/usr/src/app/doc/Requirement_intramural.docx")
-        context['meeting_address'] = meeting.place
 
     else:
         doc = DocxTemplate("/usr/src/app/doc/Requirement_extramural.docx")
-        context['meeting_address'] = meeting.place
 
     doc.render(context)
     doc.save('/usr/src/app/requirement.docx')
