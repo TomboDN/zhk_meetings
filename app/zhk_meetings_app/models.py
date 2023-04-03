@@ -55,7 +55,7 @@ class CooperativeQuestion(models.Model):
     is_report_approval = models.BooleanField(default=False)
     is_clickable = models.BooleanField(default=False)
     is_available_for_regular_meeting = models.BooleanField()
-    is_available_for_intramular_meeting = models.BooleanField()
+    is_available_for_intramural_meeting = models.BooleanField()
     is_available_for_extramural_meeting = models.BooleanField()
 
 
