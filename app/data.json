@@ -34,5 +34,233 @@
       "is_available_for_intramural_meeting": true,
       "is_available_for_extramural_meeting": false
     }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 4,
+    "fields": {
+      "question": "Утверждение внутренних документов кооператива, регулирующих деятельность органов управления кооператива и иных органов кооператива, предусмотренных настоящим уставом",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": true
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 5,
+    "fields": {
+      "question": "Утверждение размера паевого фонда кооператива и порядка его использования кооперативом",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": true
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 6,
+    "fields": {
+      "question": "Принятие решения о реорганизации кооператива",
+      "is_report_approval": false,
+      "is_clickable": true,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 7,
+    "fields": {
+      "question": "Принятие решения о ликвидации кооператива, а также назначение ликвидационной комиссии и утверждение промежуточного и окончательного ликвидационных балансов",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 8,
+    "fields": {
+      "question": "Установление размера обязательных взносов членов кооператива, за исключением размера вступительных и паевых взносов, определяемых настоящим уставом",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": true
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 9,
+    "fields": {
+      "question": "Избрание правления кооператива",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": false,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 10,
+    "fields": {
+      "question": "Прекращение полномочий правления кооператива",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": true
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 11,
+    "fields": {
+      "question": "Прекращение полномочий отдельных членов правления",
+      "is_report_approval": false,
+      "is_clickable": true,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": true
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 12,
+    "fields": {
+      "question": "Избрание ревизионной комиссии (ревизора)",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 13,
+    "fields": {
+      "question": "Прекращение, в том числе досрочное, полномочий ревизионной комиссии (ревизора) кооператива или ее отдельных членов",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": true
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 14,
+    "fields": {
+      "question": "Утверждение отчетов о деятельности правления кооператива",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": false,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 15,
+    "fields": {
+      "question": "Утверждение отчета о деятельности ревизионной комиссии (ревизора) кооператива",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": false,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 16,
+    "fields": {
+      "question": "Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива",
+      "is_report_approval": true,
+      "is_clickable": true,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": false,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 17,
+    "fields": {
+      "question": "Утверждение аудиторского заключения о достоверности бухгалтерской (финансовой) отчетности кооператива по итогам финансового года",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": true
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 18,
+    "fields": {
+      "question": "Утверждение заключений ревизионной комиссии (ревизора) кооператива по результатам проверки финансово-хозяйственной деятельности кооператива",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": true
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 19,
+    "fields": {
+      "question": "Утверждение отчетов об использовании фондов кооператива",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": true
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 20,
+    "fields": {
+      "question": "Принятие решения о приеме граждан в члены кооператива",
+      "is_report_approval": false,
+      "is_clickable": true,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 21,
+    "fields": {
+      "question": "Принятие решения об исключении граждан из кооператива",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 22,
+    "fields": {
+      "question": "Определение порядка формирования фондов кооператива, за исключением паевого фонда кооператива, и их использования",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramural_meeting": true,
+      "is_available_for_extramural_meeting": true
+    }
   }
 ]
