@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
 
-from doc import docs_filling
+from doc import docs_filling, create_requirement
 from emails import send_notification
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
@@ -349,12 +349,15 @@ def meeting_requirement_initiator_reason(request, meeting_id):
 @login_required
 def meeting_requirement_creation(request, meeting_id):
     cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    cooperative_members = CooperativeMember.objects.filter(
+        cooperative=cooperative_meeting.cooperative).order_by('email_address')
     if cooperative_meeting.meeting_type == 'regular':
         return redirect('/meeting_preparation/' + str(meeting_id))
     if request.method == "POST":
         if 'create_requirement' in request.POST:
             requirement = None
-            ...  # TODO requirement = create_requirement(meeting)
+            # TODO requirement = create_requirement(meeting)
+            requirement = create_requirement(meeting, cooperative_members)
             response = HttpResponse(requirement, content_type='application/octet-stream')
             response['Content-Disposition'] = f'attachment; filename="Требование о проведении собрания"'
             return response
