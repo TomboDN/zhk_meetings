@@ -8,7 +8,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
 from urllib.parse import quote
 
-from doc import docs_filling, create_requirement
+from doc import docs_filling, create_requirement, create_decision
 from emails import send_notification
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
@@ -411,7 +411,7 @@ def meeting_requirement_approval(request, meeting_id):
                 return redirect('/meeting_requirement_approval/' + str(meeting_id))
 
             if 'create_decision' in request.POST:
-                requirement = create_requirement(meeting, members)
+                requirement = create_decision(meeting)
                 filename = "Решение о проведении собрания.docx"
                 response = HttpResponse(requirement,
                                         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
