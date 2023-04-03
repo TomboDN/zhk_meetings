@@ -6,8 +6,8 @@ from phonenumber_field.formfields import PhoneNumberField
 from django.forms.formsets import BaseFormSet
 from phonenumber_field.widgets import RegionalPhoneNumberWidget
 
-from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion, REGULAR_QUESTIONS, \
-    IRREGULAR_INTRAMURAL_QUESTIONS, IRREGULAR_EXTRAMURAL_QUESTIONS, CooperativeMemberRepresentative
+from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion, \
+    CooperativeMemberRepresentative
 
 
 class UserRegisterForm(UserCreationForm):
@@ -131,9 +131,10 @@ class CooperativeMeetingFormatForm(forms.ModelForm):
         fields = ['meeting_format']
 
 
-class RegularQuestionsForm(forms.ModelForm):
-    questions = forms.CharField(label='Вопросы, которые можно рассматривать на очередном собрании:',
-                                widget=forms.CheckboxSelectMultiple(choices=REGULAR_QUESTIONS))
+class RegularQuestionsForm(forms.Form):
+    questions = forms.ModelMultipleChoiceField(label='Вопросы, которые можно рассматривать на очередном собрании', 
+                        widget=forms.CheckboxSelectMultiple, 
+                        queryset=CooperativeQuestion.objects.filter('is_available_for_regular_meeting' == True).values_list('question', flat=True))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
 
@@ -142,9 +143,10 @@ class RegularQuestionsForm(forms.ModelForm):
         fields = ['questions']
 
 
-class IntramuralQuestionsForm(forms.ModelForm):
-    questions = forms.CharField(label='Вопросы, которые можно рассматривать на внеочередном очном собрании:',
-                                widget=forms.CheckboxSelectMultiple(choices=IRREGULAR_INTRAMURAL_QUESTIONS))
+class IntramuralQuestionsForm(forms.Form):
+    questions = forms.ModelMultipleChoiceField(label='Вопросы, которые можно рассматривать на очном внеочередном собрании', 
+                        widget=forms.CheckboxSelectMultiple, 
+                        queryset=CooperativeQuestion.objects.filter('is_available_for_intramural_meeting' == True).values_list('question', flat=True))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
 
@@ -154,8 +156,9 @@ class IntramuralQuestionsForm(forms.ModelForm):
 
 
 class ExtramuralQuestionsForm(forms.ModelForm):
-    questions = forms.CharField(label='Вопросы, которые можно рассматривать на внеочередном заочном собрании:',
-                                widget=forms.CheckboxSelectMultiple(choices=IRREGULAR_EXTRAMURAL_QUESTIONS))
+    questions = forms.ModelMultipleChoiceField(label='Вопросы, которые можно рассматривать на заочном внеочередном собрании', 
+                        widget=forms.CheckboxSelectMultiple, 
+                        queryset=CooperativeQuestion.objects.filter('is_available_for_extramural_meeting' == True).values_list('question', flat=True))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
 

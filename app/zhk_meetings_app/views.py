@@ -237,7 +237,7 @@ def meeting_questions(request, meeting_id):
             try:
                 with transaction.atomic():
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
-                    # meeting.questions = form.cleaned_data.get('questions')
+                    meeting.questions = form.cleaned_data.get('questions')
                     meeting.save()
                     return redirect('/meeting_preparation/' + str(meeting_id))
 
