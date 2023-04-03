@@ -22,12 +22,13 @@ python manage.py flush --no-input
 python manage.py makemigrations
 python manage.py migrate
 sleep 1
+python manage.py loaddata data.json
 
 # add custom sql functions to db 
 #cat ./sql/fill_tables.sql | python manage.py dbshell
 #python manage.py collectstatic --no-input
 
-psql -d postgres -U zhk_meetings -h $SQL_HOST -p $SQL_PORT -W -d zhk_db
-psql -d postgres -U zhk_meetings -h $SQL_HOST -p $SQL_PORT -f ./sql/fill_tables.sql
+#psql -d postgres -U zhk_meetings -h $SQL_HOST -p $SQL_PORT -W -d zhk_db
+#psql -d postgres -U zhk_meetings -h $SQL_HOST -p $SQL_PORT -f ./sql/fill_tables.sql
 
 exec "$@"

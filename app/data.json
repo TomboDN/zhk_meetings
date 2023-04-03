@@ -1,0 +1,38 @@
+[
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 1,
+    "fields": {
+      "question": "Утверждение устава кооператива",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramular_meeting": true,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 2,
+    "fields": {
+      "question": "Внесение изменений в устав кооператива",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramular_meeting": true,
+      "is_available_for_extramural_meeting": false
+    }
+  },
+  {
+    "model": "zhk_meetings_app.cooperativequestion",
+    "pk": 3,
+    "fields": {
+      "question": "Утверждение устава кооператива в новой редакции",
+      "is_report_approval": false,
+      "is_clickable": false,
+      "is_available_for_regular_meeting": true,
+      "is_available_for_intramular_meeting": true,
+      "is_available_for_extramural_meeting": false
+    }
+  }
+]
