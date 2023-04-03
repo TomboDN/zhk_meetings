@@ -214,6 +214,26 @@ class MeetingApprovalForm(forms.Form):
     conduct_reason = forms.ChoiceField(label='Выберите основание', choices=REASONS)
 
 
+class MeetingCooperativeReorganizationForm(forms.Form):
+    convert_name = forms.CharField(label='Наименование ТСЖ, в который преобразуется Кооператив')
+    responsible_name = forms.CharField(
+        label='ФИО ответственного за подачу документов о реорганизации в регистрирующий орган')
+
+
+class MemberTransferFioForm(forms.Form):
+    fio = forms.CharField(label='ФИО граждан, принимаемых в создаваемое ТСЖ')
+
+
+class ChairmanMemberFioForm(forms.Form):
+    fio = forms.CharField(
+        label='ФИО/наименование члена Правления ЖК, чьи полномочия прекращаются (в родительном падеже)')
+
+
+class MemberAcceptFioForm(forms.Form):
+    fio = forms.CharField(
+        label='ФИО гражданина/граждан, подавшего заявление о вступлении в члены ЖК (в родительном падеже)')
+
+
 class IntramuralPreparationForm(forms.ModelForm):
     date = forms.DateField(label='Дата', widget=forms.NumberInput(attrs={'type': 'date'}))
     time = forms.TimeField(label='Время', widget=forms.TimeInput(attrs={'type': 'time'}))

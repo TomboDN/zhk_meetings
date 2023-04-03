@@ -35,5 +35,11 @@ urlpatterns = [
          name='meeting_requirement_creation'),
     path('meeting_requirement_approval/<int:meeting_id>/', zhk_views.meeting_requirement_approval,
          name='meeting_requirement_approval'),
+    path('meeting_cooperative_reorganization/<int:meeting_id>/', zhk_views.meeting_cooperative_reorganization,
+         name='meeting_cooperative_reorganization'),
+    path('meeting_power_termination/<int:meeting_id>/', zhk_views.meeting_power_termination,
+         name='meeting_power_termination'),
+    path('meeting_members_reception/<int:meeting_id>/', zhk_views.meeting_members_reception,
+         name='meeting_members_reception'),
     path('meeting_preparation/<int:meeting_id>/', zhk_views.meeting_preparation, name='meeting_preparation'),
 ]

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <section class="py-4 py-xl-5" style="height: 377.725px;">
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <div class="col-auto">
+                    <div class="card mb-5">
+                        <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
+                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Реорганизация кооператива</h2>
+                            <form method="post">
+                                {% csrf_token %}
+
+                                {{ form.convert_name|as_crispy_field }}
+                                {% if form.convert_name.errors %}
+                                    {% for error in form.convert_name.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+
+                                {{ form.responsible_name|as_crispy_field }}
+                                {% if form.responsible_name.errors %}
+                                    {% for error in form.responsible_name.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+
+                                {{ accepted_members_formset.management_form }}
+
+                                {% for accepted_member_form in accepted_members_formset %}
+
+                                    <div class="member-formset d-flex flex-row justify-content-center align-items-center align-content-center">
+                                        {{ accepted_member_form.fio|as_crispy_field }}
+                                        {% if accepted_member_form.fio.errors %}
+                                            {% for error in accepted_member_form.fio.errors %}
+                                                {{ error|escape }}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+
+                                {% if accepted_members_formset.non_form_errors %}
+                                    {% for error in accepted_members_formset.non_form_errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+
+                                <button class="btn btn-primary d-block w-100" id="submit" type="submit">
+                                    Сохранить и продолжить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="{% static 'jquery.formset.js' %}"></script>
+    <script>
+        $('.member-formset').formset({
+            addText: 'Добавить ещё',
+            deleteText: 'Удалить'
+        });
+    </script>
+{% endblock content %}

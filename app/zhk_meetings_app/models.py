@@ -17,6 +17,12 @@ MEETING_STAGES = [
     ('type', 'Выбор типа'),
     ('format', 'Выбор формата'),
     ('questions', 'Выбор вопросов'),
+    ('question-reorganization', 'Реорганизация кооператива'),
+    ('question-termination', 'Прекращение полномочий'),
+    ('question-reception', 'Прием граждан'),
+    ('requirement-initiator', 'Требование о проведении собрания'),
+    ('requirement-creation', 'Создание требования'),
+    ('requirement-approval', 'Принятие решения о проведении собрания'),
     ('preparation', 'Стадия подготовки'),
     ('conducting', 'Стадия проведения'),
     ('decision-making', 'Стадия принятия решения'),
@@ -64,7 +70,7 @@ class CooperativeMeeting(models.Model):
     meeting_type = models.CharField(max_length=9, choices=MEETING_TYPES)
     meeting_format = models.CharField(max_length=10, choices=MEETING_FORMATS)
     questions = models.ManyToManyField(CooperativeQuestion)
-    meeting_stage = models.CharField(max_length=15, choices=MEETING_STAGES, default='type')
+    meeting_stage = models.CharField(max_length=50, choices=MEETING_STAGES, default='type')
     initiator = models.CharField(max_length=30, choices=INITIATORS)
     reason = models.TextField()
     conduct_decision = models.BooleanField(null=True)
@@ -79,3 +85,23 @@ class CooperativeMemberRepresentative(models.Model):
     cooperative_member = models.ForeignKey(CooperativeMember, on_delete=models.CASCADE)
     representative = models.CharField(max_length=255)
 
+
+class CooperativeReorganizationAcceptedMember(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    fio = models.CharField(max_length=255)
+
+
+class CooperativeMeetingReorganization(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    convert_name = models.CharField(max_length=255)
+    responsible_name = models.CharField(max_length=255)
+
+
+class CooperativeTerminatedMember(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    fio = models.CharField(max_length=255)
+
+
+class CooperativeAcceptedMember(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    fio = models.CharField(max_length=255)

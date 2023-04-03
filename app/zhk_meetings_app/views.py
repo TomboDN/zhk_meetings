@@ -11,10 +11,13 @@ from doc import docs_filling
 from emails import send_notification
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
-    IntramuralQuestionsForm, IntramuralPreparationForm, CooperativeMeetingTypeForm, \
-    CooperativeMeetingFormatForm, ExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
-    MemberRepresentativeForm
-from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberRepresentative
+    IntramuralQuestionsForm, IntramuralPreparationForm, CooperativeMeetingTypeForm, CooperativeMeetingFormatForm, \
+    ExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
+    MemberRepresentativeForm, MeetingCooperativeReorganizationForm, MemberTransferFioForm, ChairmanMemberFioForm, \
+    MemberAcceptFioForm
+from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberRepresentative, \
+    CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
+    CooperativeAcceptedMember
 
 
 def register_request(request):
@@ -62,6 +65,21 @@ def home(request):
 @login_required
 def dashboard(request):
     return render(request=request, template_name="dashboard.html")
+
+
+def question_redirect(meeting_id):
+    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    stage = meeting.meeting_stage
+    if stage == 'requirement-initiator':
+        return redirect('/meeting_requirement_initiator_reason/' + str(meeting_id))
+    elif stage == 'question-reorganization':
+        return redirect('/meeting_cooperative_reorganization/' + str(meeting_id))
+    elif stage == 'question-termination':
+        return redirect('/meeting_power_termination/' + str(meeting_id))
+    elif stage == 'question-reception':
+        return redirect('/meeting_members_reception/' + str(meeting_id))
+    elif stage == 'preparation':
+        return redirect('/meeting_preparation/' + str(meeting_id))
 
 
 @login_required
@@ -239,7 +257,17 @@ def meeting_questions(request, meeting_id):
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
                     meeting.questions = form.cleaned_data.get('questions')
                     meeting.save()
-                    return redirect('/meeting_preparation/' + str(meeting_id))
+                    if meeting.meeting_type == 'irregular':
+                        meeting.meeting_stage = 'requirement-initiator'
+                    elif meeting.questions.exists(question='Принятие решения о реорганизации кооператива'):
+                        meeting.meeting_stage = 'question-reorganization'
+                    elif meeting.questions.exists(question='Прекращение полномочий отдельных членов правления'):
+                        meeting.meeting_stage = 'question-termination'
+                    elif meeting.questions.exists(question='Принятие решения о приеме граждан в члены кооператива'):
+                        meeting.meeting_stage = 'question-reception'
+
+                    meeting.save()
+                    return question_redirect(meeting_id)
 
             except IntegrityError:
                 return redirect('/meeting_questions/' + str(meeting_id))
@@ -271,7 +299,7 @@ def meeting_requirement_initiator_reason(request, meeting_id):
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
                     meeting.initiator = form.cleaned_data.get('initiator')
                     meeting.reason = form.cleaned_data.get('reason')
-                    # meeting.meeting_stage = 'questions'
+                    meeting.meeting_stage = 'requirement-creation'
                     meeting.save()
                     return redirect('/meeting_requirement_creation/' + str(meeting_id))
             except IntegrityError:
@@ -296,7 +324,7 @@ def meeting_requirement_initiator_reason(request, meeting_id):
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
                     meeting.initiator = form.cleaned_data.get('initiator')
                     meeting.reason = form.cleaned_data.get('reason')
-                    # meeting.meeting_stage = 'questions'
+                    meeting.meeting_stage = 'requirement-creation'
                     meeting.save()
                     CooperativeMemberRepresentative.objects.bulk_create(represented_members)
                     return redirect('/meeting_requirement_creation/' + str(meeting_id))
@@ -330,7 +358,15 @@ def meeting_requirement_creation(request, meeting_id):
             return response
 
         elif 'continue' in request.POST:
-            return redirect('/meeting_requirement_approval/' + str(meeting_id))
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    meeting.meeting_stage = 'requirement-approval'
+                    meeting.save()
+                    return redirect('/meeting_requirement_approval/' + str(meeting_id))
+
+            except IntegrityError:
+                return redirect('/meeting_requirement_creation/' + str(meeting_id))
     return render(request=request, template_name="meeting_data/meeting_requirement_creation.html", context={})
 
 
@@ -349,7 +385,16 @@ def meeting_requirement_approval(request, meeting_id):
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
                     meeting.conduct_decision = conduct_decision
                     meeting.conduct_reason = conduct_reason
-                    # meeting.meeting_stage = 'questions'
+
+                    if meeting.questions.exists(question='Принятие решения о реорганизации кооператива'):
+                        meeting.meeting_stage = 'question-reorganization'
+                    elif meeting.questions.exists(question='Прекращение полномочий отдельных членов правления'):
+                        meeting.meeting_stage = 'question-termination'
+                    elif meeting.questions.exists(question='Принятие решения о приеме граждан в члены кооператива'):
+                        meeting.meeting_stage = 'question-reception'
+                    else:
+                        meeting.meeting_stage = 'preparation'
+
                     meeting.save()
 
             except IntegrityError:
@@ -365,7 +410,7 @@ def meeting_requirement_approval(request, meeting_id):
             elif 'continue' in request.POST:
                 if conduct_decision == "True":
                     # TODO SEND decision
-                    return redirect('/meeting_preparation/' + str(meeting_id))
+                    return question_redirect(meeting_id)
                 else:
                     return redirect('/dashboard/')
         else:
@@ -373,6 +418,133 @@ def meeting_requirement_approval(request, meeting_id):
     form = MeetingApprovalForm()
     return render(request=request, template_name="meeting_data/meeting_requirement_approval.html",
                   context={"form": form})
+
+
+@login_required
+def meeting_cooperative_reorganization(request, meeting_id):
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    accepted_members_form_set = formset_factory(MemberTransferFioForm, formset=BaseFormSet)
+
+    if request.method == "POST":
+        form = MeetingCooperativeReorganizationForm(request.POST)
+        accepted_members_formset = accepted_members_form_set(request.POST)
+
+        if form.is_valid() and accepted_members_formset.is_valid():
+            accepted_members = []
+
+            for accepted_member_form in accepted_members_formset:
+                fio = accepted_member_form.cleaned_data.get('fio')
+                accepted_members.append(CooperativeReorganizationAcceptedMember(cooperative_meeting=cooperative_meeting,
+                                                                                fio=fio))
+
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    reorganization_data = CooperativeMeetingReorganization.objects.create(
+                        cooperative_meeting=cooperative_meeting, convert_name=form.cleaned_data.get('convert_name'),
+                        responsible_name=form.cleaned_data.get('responsible_name'))
+                    reorganization_data.save()
+                    CooperativeReorganizationAcceptedMember.objects.bulk_create(accepted_members)
+                    if meeting.questions.exists(question='Прекращение полномочий отдельных членов правления'):
+                        meeting.meeting_stage = 'question-termination'
+                    elif meeting.questions.exists(question='Принятие решения о приеме граждан в члены кооператива'):
+                        meeting.meeting_stage = 'question-reception'
+                    else:
+                        meeting.meeting_stage = 'preparation'
+                    meeting.save()
+                    return question_redirect(meeting_id)
+
+            except IntegrityError:
+                return redirect('/meeting_cooperative_reorganization/' + str(meeting_id))
+        else:
+            return redirect('/meeting_cooperative_reorganization/' + str(meeting_id))
+    else:
+        accepted_members_formset = accepted_members_form_set()
+    form = MeetingCooperativeReorganizationForm()
+    context = {
+        'form': form,
+        'accepted_members_formset': accepted_members_formset,
+    }
+
+    return render(request=request, template_name="meeting_data/meeting_cooperative_reorganization.html",
+                  context=context)
+
+
+@login_required
+def meeting_power_termination(request, meeting_id):
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    members_form_set = formset_factory(ChairmanMemberFioForm, formset=BaseFormSet)
+
+    if request.method == "POST":
+        members_formset = members_form_set(request.POST)
+
+        if members_formset.is_valid():
+            terminated_members = []
+
+            for member_form in members_formset:
+                fio = member_form.cleaned_data.get('fio')
+                terminated_members.append(
+                    CooperativeTerminatedMember(cooperative_meeting=cooperative_meeting, fio=fio))
+
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    CooperativeTerminatedMember.objects.bulk_create(terminated_members)
+                    if meeting.questions.exists(question='Принятие решения о приеме граждан в члены кооператива'):
+                        meeting.meeting_stage = 'question-reception'
+                    else:
+                        meeting.meeting_stage = 'preparation'
+                    meeting.save()
+                    return question_redirect(meeting_id)
+
+            except IntegrityError:
+                return redirect('/meeting_power_termination/' + str(meeting_id))
+        else:
+            return redirect('/meeting_power_termination/' + str(meeting_id))
+    else:
+        members_formset = members_form_set()
+    context = {
+        'members_formset': members_formset,
+    }
+    return render(request=request, template_name="meeting_data/meeting_power_termination.html",
+                  context=context)
+
+
+@login_required
+def meeting_members_reception(request, meeting_id):
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    members_form_set = formset_factory(MemberAcceptFioForm, formset=BaseFormSet)
+
+    if request.method == "POST":
+        members_formset = members_form_set(request.POST)
+
+        if members_formset.is_valid():
+            accepted_members = []
+
+            for member_form in members_formset:
+                fio = member_form.cleaned_data.get('fio')
+                accepted_members.append(
+                    CooperativeAcceptedMember(cooperative_meeting=cooperative_meeting, fio=fio))
+
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    CooperativeAcceptedMember.objects.bulk_create(accepted_members)
+                    meeting.meeting_stage = 'preparation'
+                    meeting.save()
+                    return redirect('/meeting_preparation/' + str(meeting_id))
+
+            except IntegrityError:
+                return redirect('/meeting_members_reception/' + str(meeting_id))
+        else:
+            return redirect('/meeting_members_reception/' + str(meeting_id))
+    else:
+        members_formset = members_form_set()
+    context = {
+        'members_formset': members_formset,
+    }
+    return render(request=request, template_name="meeting_data/meeting_members_reception.html",
+                  context=context)
 
 
 @login_required
@@ -424,18 +596,19 @@ def meeting_preparation(request, meeting_id):
                     return redirect('/meeting_preparation/' + str(meeting_id))
 
             files = request.FILES.getlist('appendix')
-                
+
             if 'create_notification' in request.POST:
                 # TODO notification = create_notification(meeting)
                 notification_number = 1
                 for member in cooperative_members:
-                    docs_filling(meeting.meeting_type, meeting.meeting_format, notification_number, member.fio, meeting, files)
-                    notification_number += 1 
+                    docs_filling(meeting.meeting_type, meeting.meeting_format, notification_number, member.fio, meeting,
+                                 files)
+                    notification_number += 1
 
                 return redirect('/dashboard')
 
             elif 'save_and_continue' in request.POST:
-                #files = request.FILES.getlist('appendix')
+                # files = request.FILES.getlist('appendix')
                 send_notification(meeting, files)
 
                 return redirect('/dashboard')
