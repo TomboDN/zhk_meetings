@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
+from urllib.parse import quote
 
 from doc import docs_filling, create_requirement
 from emails import send_notification
@@ -357,7 +358,7 @@ def meeting_requirement_creation(request, meeting_id):
         if 'create_requirement' in request.POST:
             requirement = None
             # TODO requirement = create_requirement(meeting)
-            requirement = create_requirement(meeting, cooperative_members)
+            requirement = create_requirement(cooperative_meeting, cooperative_members)
             response = HttpResponse(requirement, content_type='application/octet-stream')
             response['Content-Disposition'] = f'attachment; filename="Требование о проведении собрания"'
             return response
@@ -378,6 +379,7 @@ def meeting_requirement_creation(request, meeting_id):
 @login_required
 def meeting_requirement_approval(request, meeting_id):
     cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    members = CooperativeMember.objects.filter(cooperative=cooperative_meeting.cooperative)
     if cooperative_meeting.meeting_type == 'regular':
         return redirect('/meeting_preparation/' + str(meeting_id))
     if request.method == "POST":
@@ -391,11 +393,13 @@ def meeting_requirement_approval(request, meeting_id):
                     meeting.conduct_decision = conduct_decision
                     meeting.conduct_reason = conduct_reason
 
-                    if meeting.questions.exists(question='Принятие решения о реорганизации кооператива'):
+                    if meeting.questions.filter(question='Принятие решения о реорганизации кооператива').exists():
                         meeting.meeting_stage = 'question-reorganization'
-                    elif meeting.questions.exists(question='Прекращение полномочий отдельных членов правления'):
+                    elif meeting.questions.filter(
+                            question='Прекращение полномочий отдельных членов правления').exists():
                         meeting.meeting_stage = 'question-termination'
-                    elif meeting.questions.exists(question='Принятие решения о приеме граждан в члены кооператива'):
+                    elif meeting.questions.filter(
+                            question='Принятие решения о приеме граждан в члены кооператива').exists():
                         meeting.meeting_stage = 'question-reception'
                     else:
                         meeting.meeting_stage = 'preparation'
@@ -406,10 +410,17 @@ def meeting_requirement_approval(request, meeting_id):
                 return redirect('/meeting_requirement_approval/' + str(meeting_id))
 
             if 'create_decision' in request.POST:
-                decision = None
-                ...  # TODO decision = create_decision(meeting, choice, reason)
-                response = HttpResponse(decision, content_type='application/octet-stream')
-                response['Content-Disposition'] = f'attachment; filename="Решение о проведении собрания"'
+                requirement = create_requirement(meeting, members)
+                filename = "Решение о проведении собрания.docx"
+                response = HttpResponse(requirement,
+                                        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                disposition = 'attachment'
+                try:
+                    filename.encode('ascii')
+                    file_expr = 'filename="{}"'.format(filename)
+                except UnicodeEncodeError:
+                    file_expr = "filename*=utf-8''{}".format(quote(filename))
+                response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
                 return response
 
             elif 'continue' in request.POST:
@@ -450,9 +461,10 @@ def meeting_cooperative_reorganization(request, meeting_id):
                         responsible_name=form.cleaned_data.get('responsible_name'))
                     reorganization_data.save()
                     CooperativeReorganizationAcceptedMember.objects.bulk_create(accepted_members)
-                    if meeting.questions.exists(question='Прекращение полномочий отдельных членов правления'):
+                    if meeting.questions.filter(question='Прекращение полномочий отдельных членов правления').exists():
                         meeting.meeting_stage = 'question-termination'
-                    elif meeting.questions.exists(question='Принятие решения о приеме граждан в члены кооператива'):
+                    elif meeting.questions.filter(
+                            question='Принятие решения о приеме граждан в члены кооператива').exists():
                         meeting.meeting_stage = 'question-reception'
                     else:
                         meeting.meeting_stage = 'preparation'
@@ -495,7 +507,8 @@ def meeting_power_termination(request, meeting_id):
                 with transaction.atomic():
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
                     CooperativeTerminatedMember.objects.bulk_create(terminated_members)
-                    if meeting.questions.exists(question='Принятие решения о приеме граждан в члены кооператива'):
+                    if meeting.questions.filter(
+                            question='Принятие решения о приеме граждан в члены кооператива').exists():
                         meeting.meeting_stage = 'question-reception'
                     else:
                         meeting.meeting_stage = 'preparation'
@@ -606,11 +619,21 @@ def meeting_preparation(request, meeting_id):
                 # TODO notification = create_notification(meeting)
                 notification_number = 1
                 for member in cooperative_members:
-                    docs_filling(meeting.meeting_type, meeting.meeting_format, notification_number, member.fio, meeting,
-                                 files)
+                    notification = docs_filling(meeting.meeting_type, meeting.meeting_format, notification_number,
+                                                member.fio, meeting,
+                                                files)
                     notification_number += 1
-
-                return redirect('/dashboard')
+                filename = "Уведомление.docx"
+                response = HttpResponse(notification,
+                                        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                disposition = 'attachment'
+                try:
+                    filename.encode('ascii')
+                    file_expr = 'filename="{}"'.format(filename)
+                except UnicodeEncodeError:
+                    file_expr = "filename*=utf-8''{}".format(quote(filename))
+                response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
+                return response
 
             elif 'save_and_continue' in request.POST:
                 # files = request.FILES.getlist('appendix')

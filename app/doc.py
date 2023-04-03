@@ -1,4 +1,5 @@
 import datetime
+import io
 
 from docxtpl import DocxTemplate
 
@@ -31,7 +32,7 @@ def create_requirement(meeting, cooperative_members):
                 'auditor_name' : meeting.cooperative.chairman_name,
                 'today_date' :  today_date }
     
-    if meeting.format == 'intramural':
+    if meeting.meeting_format == 'intramural':
         doc = DocxTemplate("/usr/src/app/doc/Requirement_intramural.docx")
         context['meeting_address'] = meeting.place
 
@@ -41,6 +42,10 @@ def create_requirement(meeting, cooperative_members):
 
     doc.render(context)
     doc.save('/usr/src/app/requirement.docx')
+    file_stream = io.BytesIO()
+    doc.save(file_stream)
+    file_stream.seek(0)
+    return file_stream
 
     
 def docs_filling(type, format, notification_number, fio, meeting, files):
@@ -89,4 +94,8 @@ def docs_filling(type, format, notification_number, fio, meeting, files):
 
     doc.render(context)
     doc.save('/usr/src/app/notification'+str(notification_number)+'.docx')
+    file_stream = io.BytesIO()
+    doc.save(file_stream)
+    file_stream.seek(0)
+    return file_stream
 
