@@ -135,8 +135,7 @@ class RegularQuestionsForm(forms.ModelForm):
     questions = forms.ModelMultipleChoiceField(label='Вопросы, которые можно рассматривать на очередном собрании',
                                                widget=forms.CheckboxSelectMultiple,
                                                queryset=CooperativeQuestion.objects.filter(
-                                                   is_available_for_regular_meeting=True).values_list('question',
-                                                                                                      flat=True))
+                                                   is_available_for_regular_meeting=True))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
 
@@ -145,12 +144,11 @@ class RegularQuestionsForm(forms.ModelForm):
         fields = ['questions']
 
 
-class IntramuralQuestionsForm(forms.Form):
+class IntramuralQuestionsForm(forms.ModelForm):
     questions = forms.ModelMultipleChoiceField(
         label='Вопросы, которые можно рассматривать на очном внеочередном собрании',
         widget=forms.CheckboxSelectMultiple,
-        queryset=CooperativeQuestion.objects.filter(is_available_for_intramural_meeting=True).values_list('question',
-                                                                                                          flat=True))
+        queryset=CooperativeQuestion.objects.filter(is_available_for_intramural_meeting=True))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
 
@@ -163,8 +161,7 @@ class ExtramuralQuestionsForm(forms.ModelForm):
     questions = forms.ModelMultipleChoiceField(
         label='Вопросы, которые можно рассматривать на заочном внеочередном собрании',
         widget=forms.CheckboxSelectMultiple,
-        queryset=CooperativeQuestion.objects.filter(is_available_for_extramural_meeting=True).values_list('question',
-                                                                                                          flat=True))
+        queryset=CooperativeQuestion.objects.filter(is_available_for_extramural_meeting=True))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
 

@@ -256,15 +256,16 @@ def meeting_questions(request, meeting_id):
             try:
                 with transaction.atomic():
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
-                    meeting.questions = form.cleaned_data.get('questions')
+                    for question in form.cleaned_data.get('questions'):
+                        meeting.questions.add(question)
                     meeting.save()
                     if meeting.meeting_type == 'irregular':
                         meeting.meeting_stage = 'requirement-initiator'
-                    elif meeting.questions.exists(question='Принятие решения о реорганизации кооператива'):
+                    elif meeting.questions.filter(question='Принятие решения о реорганизации кооператива').exists:
                         meeting.meeting_stage = 'question-reorganization'
-                    elif meeting.questions.exists(question='Прекращение полномочий отдельных членов правления'):
+                    elif meeting.questions.filter(question='Прекращение полномочий отдельных членов правления').exists:
                         meeting.meeting_stage = 'question-termination'
-                    elif meeting.questions.exists(question='Принятие решения о приеме граждан в члены кооператива'):
+                    elif meeting.questions.filter(question='Принятие решения о приеме граждан в члены кооператива').exists:
                         meeting.meeting_stage = 'question-reception'
                     else:
                         meeting.meeting_stage = 'preparation'

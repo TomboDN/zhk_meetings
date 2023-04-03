@@ -64,6 +64,9 @@ class CooperativeQuestion(models.Model):
     is_available_for_intramural_meeting = models.BooleanField()
     is_available_for_extramural_meeting = models.BooleanField()
 
+    def __str__(self):
+        return self.question
+
 
 class CooperativeMeeting(models.Model):
     cooperative = models.ForeignKey(Cooperative, on_delete=models.CASCADE)
