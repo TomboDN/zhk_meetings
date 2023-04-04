@@ -17,7 +17,8 @@ jobs:
           password: zhk_meetings
           script: |
             cd zhk_meetings
-            git pull
             docker compose down
             yes | docker system prune -a
+            git reset --hard
+            git pull
             docker compose up -d          

@@ -17,5 +17,5 @@ RUN sed -i 's/\r$//g' /usr/src/app/entrypoint.sh
 RUN chmod +x /usr/src/app/entrypoint.sh
 
 COPY . .
-RUN chmod +x /usr/src/app/entrypoint.sh
+
 ENTRYPOINT ["/bin/sh", "/usr/src/app/entrypoint.sh"]
