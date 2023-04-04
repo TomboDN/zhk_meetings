@@ -131,13 +131,38 @@ class CooperativeMeetingFormatForm(forms.ModelForm):
         fields = ['meeting_format']
 
 
+class SelectWithDisabledOptions(forms.CheckboxSelectMultiple):
+
+    def __init__(self, disabled_choices, *args, **kwargs):
+        self.disabled_choices = disabled_choices
+        super(SelectWithDisabledOptions, self).__init__(*args, **kwargs)
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        
+        option_dict = super(SelectWithDisabledOptions, self).create_option(
+            name, value, label, selected, index, subindex=subindex, attrs=attrs
+        )
+        if value in self.disabled_choices:
+            option_dict['attrs']['disabled'] = 'disabled'
+        return option_dict
+
+
 class RegularQuestionsForm(forms.ModelForm):
     questions = forms.ModelMultipleChoiceField(label='Вопросы, которые можно рассматривать на очередном собрании',
-                                               widget=forms.CheckboxSelectMultiple,
-                                               queryset=CooperativeQuestion.objects.filter(
-                                                   is_available_for_regular_meeting=True))
+                                    widget=SelectWithDisabledOptions(disabled_choices=None),
+                                    queryset=CooperativeQuestion.objects.filter(
+                                    is_available_for_regular_meeting=True))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        disabled_choices = list()
+        for question in CooperativeQuestion.objects.all():
+            if not question.is_clickable:
+                disabled_choices.append(question.id)
+        self.fields['questions'].widget.disabled_choices = disabled_choices
 
     class Meta:
         model = CooperativeMeeting
@@ -147,10 +172,19 @@ class RegularQuestionsForm(forms.ModelForm):
 class IntramuralQuestionsForm(forms.ModelForm):
     questions = forms.ModelMultipleChoiceField(
         label='Вопросы, которые можно рассматривать на очном внеочередном собрании',
-        widget=forms.CheckboxSelectMultiple,
+        widget=SelectWithDisabledOptions(disabled_choices=None),
         queryset=CooperativeQuestion.objects.filter(is_available_for_intramural_meeting=True))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        disabled_choices = list()
+        for question in CooperativeQuestion.objects.all():
+            if not question.is_clickable:
+                disabled_choices.append(question.id)
+        self.fields['questions'].widget.disabled_choices = disabled_choices
 
     class Meta:
         model = CooperativeMeeting
@@ -160,10 +194,19 @@ class IntramuralQuestionsForm(forms.ModelForm):
 class ExtramuralQuestionsForm(forms.ModelForm):
     questions = forms.ModelMultipleChoiceField(
         label='Вопросы, которые можно рассматривать на заочном внеочередном собрании',
-        widget=forms.CheckboxSelectMultiple,
+        widget=SelectWithDisabledOptions(disabled_choices=None),
         queryset=CooperativeQuestion.objects.filter(is_available_for_extramural_meeting=True))
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        disabled_choices = list()
+        for question in CooperativeQuestion.objects.all():
+            if not question.is_clickable:
+                disabled_choices.append(question.id)
+        self.fields['questions'].widget.disabled_choices = disabled_choices
 
     class Meta:
         model = CooperativeMeeting
