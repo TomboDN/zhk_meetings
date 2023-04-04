@@ -360,8 +360,17 @@ def meeting_requirement_creation(request, meeting_id):
             requirement = None
             # TODO requirement = create_requirement(meeting)
             requirement = create_requirement(cooperative_meeting, cooperative_members)
-            response = HttpResponse(requirement, content_type='application/octet-stream')
-            response['Content-Disposition'] = f'attachment; filename="Требование о проведении собрания"'
+
+            filename = "Требование.docx"
+            response = HttpResponse(requirement,
+                                    content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            disposition = 'attachment'
+            try:
+                filename.encode('ascii')
+                file_expr = 'filename="{}"'.format(filename)
+            except UnicodeEncodeError:
+                file_expr = "filename*=utf-8''{}".format(quote(filename))
+            response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
             return response
 
         elif 'continue' in request.POST:
@@ -411,7 +420,8 @@ def meeting_requirement_approval(request, meeting_id):
                 return redirect('/meeting_requirement_approval/' + str(meeting_id))
 
             if 'create_decision' in request.POST:
-                requirement = create_decision(meeting)
+                decision_number = 1
+                requirement = create_decision(decision_number, meeting)
                 filename = "Решение о проведении собрания.docx"
                 response = HttpResponse(requirement,
                                         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -620,8 +630,8 @@ def meeting_preparation(request, meeting_id):
                 # TODO notification = create_notification(meeting)
                 notification_number = 1
                 for member in cooperative_members:
-                    notification = docs_filling(meeting.meeting_type, meeting.meeting_format, notification_number,
-                                                member.fio, meeting,
+                    notification = docs_filling(notification_number,
+                                                member.pk, member.fio, meeting,
                                                 files)
                     notification_number += 1
                 filename = "Уведомление.docx"
