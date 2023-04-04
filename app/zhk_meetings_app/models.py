@@ -17,6 +17,12 @@ MEETING_STAGES = [
     ('type', 'Выбор типа'),
     ('format', 'Выбор формата'),
     ('questions', 'Выбор вопросов'),
+    ('question-reorganization', 'Реорганизация кооператива'),
+    ('question-termination', 'Прекращение полномочий'),
+    ('question-reception', 'Прием граждан'),
+    ('requirement-initiator', 'Требование о проведении собрания'),
+    ('requirement-creation', 'Создание требования'),
+    ('requirement-approval', 'Принятие решения о проведении собрания'),
     ('preparation', 'Стадия подготовки'),
     ('conducting', 'Стадия проведения'),
     ('decision-making', 'Стадия принятия решения'),
@@ -27,79 +33,6 @@ INITIATORS = [
         ('auditor', 'Ревизионная комиссия / ревизор'),
         ('members', 'Члены кооператива')
     ]
-
-REGULAR_QUESTIONS = [
-        ('statute-approval', 'Утверждение устава кооператива'),
-        ('statute-changes', 'Внесение изменений в устав кооператива'),
-        ('statute-changes-approval', 'Утверждение устава кооператива в новой редакции'),
-        ('internal-docs', 'Утверждение внутренних документов кооператива, регулирующих деятельность органов управления '
-                                    'кооператива и иных органов кооператива, предусмотренных настоящим уставом'),
-        ('mutual-fund', 'Утверждение размера паевого фонда Кооператива и порядка его использования Кооперативом'),
-        ('reorganization', 'Принятие решения о реорганизации кооператива'),
-        ('liquidation', 'Принятие решения о ликвидации кооператива, а также назначение ликвидационной комиссии и '
-                                    'утверждение промежуточного и окончательного ликвидационных балансов'),
-        ('mandatory-contributions', 'Установление размера обязательных взносов членов кооператива, за исключением размера '
-                                    'вступительных и паевых взносов, определяемых настоящим уставом'),
-        ('governance', 'Избрание правления кооператива'),
-        ('governance-termination', 'Прекращение полномочий правления кооператива'),
-        ('governers-termination', 'Прекращение полномочий отдельных членов правления'),
-        ('auditor', 'Избрание ревизионной комиссии (ревизора)'),
-        ('auditor-termination', 'Прекращение, в том числе досрочное, полномочий ревизионной комиссии (ревизора) кооператива или ее отдельных членов'),
-        ('governance-report', 'Утверждение отчетов о деятельности правления кооператива'),
-        ('auditor-report', 'Утверждение отчета о деятельности ревизионной комиссии (ревизора) кооператива'),
-        ('annual-report', 'Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива'),
-        ('financial-approval', 'Утверждение аудиторского заключения о достоверности бухгалтерской (финансовой) отчетности '
-                                    'кооператива по итогам финансового года'),
-        ('financial-economic-approval', 'Утверждение заключений ревизионной комиссии (ревизора) кооператива по результатам проверки '
-                                    'финансово-хозяйственной деятельности кооператива'),
-        ('fund-report', 'Утверждение отчетов об использовании фондов кооператива'),
-        ('member-inclusion', 'Принятие решения о приеме граждан в члены кооператива'),
-        ('member-exclusion', 'Принятие решения об исключении граждан из кооператива'),
-        ('fund-planning', 'Определение порядка формирования фондов кооператива, за исключением паевого фонда кооператива, и их использования'),
-    ]
-
-IRREGULAR_INTRAMURAL_QUESTIONS = [
-        ('statute-approval', 'Утверждение устава кооператива'),
-        ('statute-changes', 'Внесение изменений в устав кооператива'),
-        ('statute-changes-approval', 'Утверждение устава кооператива в новой редакции'),
-        ('internal-docs', 'Утверждение внутренних документов кооператива, регулирующих деятельность органов управления '
-                                    'кооператива и иных органов кооператива, предусмотренных настоящим уставом'),
-        ('mutual-fund', 'Утверждение размера паевого фонда Кооператива и порядка его использования Кооперативом'),
-        ('reorganization', 'Принятие решения о реорганизации кооператива'),
-        ('liquidation', 'Принятие решения о ликвидации кооператива, а также назначение ликвидационной комиссии и '
-                                    'утверждение промежуточного и окончательного ликвидационных балансов'),
-        ('mandatory-contributions', 'Установление размера обязательных взносов членов кооператива, за исключением размера '
-                                    'вступительных и паевых взносов, определяемых настоящим уставом'),
-        ('governance-termination', 'Прекращение полномочий правления кооператива'),
-        ('governers-termination', 'Прекращение полномочий отдельных членов правления'),
-        ('auditor', 'Избрание ревизионной комиссии (ревизора)'),
-        ('auditor-termination', 'Прекращение, в том числе досрочное, полномочий ревизионной комиссии (ревизора) кооператива или ее отдельных членов'),
-        ('financial-approval', 'Утверждение аудиторского заключения о достоверности бухгалтерской (финансовой) отчетности '
-                                    'кооператива по итогам финансового года'),
-        ('financial-economic-approval', 'Утверждение заключений ревизионной комиссии (ревизора) кооператива по результатам проверки '
-                                    'финансово-хозяйственной деятельности кооператива'),
-        ('fund-report', 'Утверждение отчетов об использовании фондов кооператива'),
-        ('member-inclusion', 'Принятие решения о приеме граждан в члены кооператива'),
-        ('member-exclusion', 'Принятие решения об исключении граждан из кооператива'),
-        ('fund-planning', 'Определение порядка формирования фондов кооператива, за исключением паевого фонда кооператива, и их использования'),
-]
-
-IRREGULAR_EXTRAMURAL_QUESTIONS = [
-        ('internal-docs', 'Утверждение внутренних документов кооператива, регулирующих деятельность органов управления '
-                                    'кооператива и иных органов кооператива, предусмотренных настоящим уставом'),
-        ('mutual-fund', 'Утверждение размера паевого фонда Кооператива и порядка его использования Кооперативом'),
-        ('mandatory-contributions', 'Установление размера обязательных взносов членов кооператива, за исключением размера '
-                                    'вступительных и паевых взносов, определяемых настоящим уставом'),
-        ('governance-termination', 'Прекращение полномочий правления кооператива'),
-        ('governers-termination', 'Прекращение полномочий отдельных членов правления'),
-        ('auditor-termination', 'Прекращение, в том числе досрочное, полномочий ревизионной комиссии (ревизора) кооператива или ее отдельных членов'),
-        ('financial-approval', 'Утверждение аудиторского заключения о достоверности бухгалтерской (финансовой) отчетности '
-                                    'кооператива по итогам финансового года'),
-        ('financial-economic-approval', 'Утверждение заключений ревизионной комиссии (ревизора) кооператива по результатам проверки '
-                                    'финансово-хозяйственной деятельности кооператива'),
-        ('fund-report', 'Утверждение отчетов об использовании фондов кооператива'),
-        ('fund-planning', 'Определение порядка формирования фондов кооператива, за исключением паевого фонда кооператива, и их использования'),
-]
 
 
 class Cooperative(models.Model):
@@ -125,10 +58,14 @@ class CooperativeMember(models.Model):
 
 class CooperativeQuestion(models.Model):
     question = models.CharField(max_length=255)
-    is_report_approval = models.BooleanField()
-    is_available = models.BooleanField(default=False)
-    meeting_type = models.CharField(max_length=9, choices=MEETING_TYPES)
-    meeting_format = models.CharField(max_length=10, choices=MEETING_FORMATS)
+    is_report_approval = models.BooleanField(default=False)
+    is_clickable = models.BooleanField(default=False)
+    is_available_for_regular_meeting = models.BooleanField()
+    is_available_for_intramural_meeting = models.BooleanField()
+    is_available_for_extramural_meeting = models.BooleanField()
+
+    def __str__(self):
+        return self.question
 
 
 class CooperativeMeeting(models.Model):
@@ -136,7 +73,7 @@ class CooperativeMeeting(models.Model):
     meeting_type = models.CharField(max_length=9, choices=MEETING_TYPES)
     meeting_format = models.CharField(max_length=10, choices=MEETING_FORMATS)
     questions = models.ManyToManyField(CooperativeQuestion)
-    meeting_stage = models.CharField(max_length=15, choices=MEETING_STAGES, default='type')
+    meeting_stage = models.CharField(max_length=50, choices=MEETING_STAGES, default='type')
     initiator = models.CharField(max_length=30, choices=INITIATORS)
     reason = models.TextField()
     conduct_decision = models.BooleanField(null=True)
@@ -151,3 +88,23 @@ class CooperativeMemberRepresentative(models.Model):
     cooperative_member = models.ForeignKey(CooperativeMember, on_delete=models.CASCADE)
     representative = models.CharField(max_length=255)
 
+
+class CooperativeReorganizationAcceptedMember(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    fio = models.CharField(max_length=255)
+
+
+class CooperativeMeetingReorganization(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    convert_name = models.CharField(max_length=255)
+    responsible_name = models.CharField(max_length=255)
+
+
+class CooperativeTerminatedMember(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    fio = models.CharField(max_length=255)
+
+
+class CooperativeAcceptedMember(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    fio = models.CharField(max_length=255)

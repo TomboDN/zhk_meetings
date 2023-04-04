@@ -1,4 +1,5 @@
 import datetime
+import io
 
 from docxtpl import DocxTemplate
 
@@ -10,6 +11,92 @@ def strings_creating(elements):
     return elements_string
 
 
+def create_decision(meeting):
+    today_date = datetime.date.today().strftime("%d.%m.%Y")
+    
+    questions_list = meeting.questions
+    questions = []
+    for question in questions_list.all():
+        questions.append(question.question)
+    
+    questions_string = strings_creating(questions)
+
+    context = { 'cooperative_name' : meeting.cooperative.cooperative_name,
+                'cooperative_address' : meeting.cooperative.cooperative_address,
+                'cooperative_itn' : meeting.cooperative.cooperative_itn,
+                'cooperative_telephone_number' : meeting.cooperative.cooperative_telephone_number,
+                'cooperative_email_address' : meeting.cooperative.cooperative_email_address,
+                'initiator': meeting.initiator,
+                'date' : meeting.date,
+                'today_date' : today_date,
+                'chairman_name' : meeting.cooperative.chaiman_name }
+    
+    if meeting.conduct_decision == True:
+        doc = DocxTemplate("/usr/src/app/doc/Decision_1.docx")
+        context['meeting_format'] = meeting.meeting_format
+        context['questions'] = questions_string
+        
+    else:
+        doc = DocxTemplate("/usr/src/app/doc/Decision_2.docx")
+        context['conduct_reason'] = meeting.conduct_reason
+
+    doc.render(context)
+    doc.save('/usr/src/app/decision.docx')
+    file_stream = io.BytesIO()
+    doc.save(file_stream)
+    file_stream.seek(0)
+    return file_stream
+
+
+def create_requirement(meeting, cooperative_members):
+    if meeting.initiator == 'chairman':
+        name = meeting.cooperative.chairman_name
+        name_type = 'Председатель кооператива:'
+        sign_name = '________________________ ' + name
+    elif meeting.initiator == 'auditor':
+        name = meeting.cooperative.auditor_name
+        name_type = 'Ревизор / председатель ревизионной комиссии:'
+        sign_name = '________________________ ' + name
+    else:
+        name = ''
+        name_type = ''
+        sign_name = ''
+        for member in cooperative_members:
+            name += member.fio + '\n'
+            name_type += 'Член Кооператива / представитель члена Кооператива:\n'
+            sign_name += '________________________ ' + name + '\n'
+    
+    today_date = datetime.date.today().strftime("%d.%m.%Y")
+    
+    questions_list = meeting.questions
+    questions = []
+    for question in questions_list.all():
+        questions.append(question.question)
+    
+    questions_string = strings_creating(questions)
+
+    context = { 'name' : name,
+                'cooperative_name' : meeting.cooperative.cooperative_name,
+                'reason' : meeting.reason,
+                'questions' : questions_string,
+                'today_date' : today_date,
+                'name_type' : name_type,
+                'sign_name' : sign_name }
+    
+    if meeting.meeting_format == 'intramural':
+        doc = DocxTemplate("/usr/src/app/doc/Requirement_intramural.docx")
+
+    else:
+        doc = DocxTemplate("/usr/src/app/doc/Requirement_extramural.docx")
+
+    doc.render(context)
+    doc.save('/usr/src/app/requirement.docx')
+    file_stream = io.BytesIO()
+    doc.save(file_stream)
+    file_stream.seek(0)
+    return file_stream
+
+    
 def docs_filling(type, format, notification_number, fio, meeting, files):
     hours = str(meeting.time).split(':')[0]
     minutes = str(meeting.time).split(':')[1]    
@@ -56,4 +143,8 @@ def docs_filling(type, format, notification_number, fio, meeting, files):
 
     doc.render(context)
     doc.save('/usr/src/app/notification'+str(notification_number)+'.docx')
+    file_stream = io.BytesIO()
+    doc.save(file_stream)
+    file_stream.seek(0)
+    return file_stream
 
