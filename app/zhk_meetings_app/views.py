@@ -16,7 +16,7 @@ from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, Coopera
     ExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
     MemberRepresentativeForm, MeetingCooperativeReorganizationForm, MemberTransferFioForm, ChairmanMemberFioForm, \
     MemberAcceptFioForm
-from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberRepresentative, \
+from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberInitiator, \
     CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
     CooperativeAcceptedMember
 
@@ -265,7 +265,8 @@ def meeting_questions(request, meeting_id):
                         meeting.meeting_stage = 'question-reorganization'
                     elif meeting.questions.filter(question='Прекращение полномочий отдельных членов правления').exists:
                         meeting.meeting_stage = 'question-termination'
-                    elif meeting.questions.filter(question='Принятие решения о приеме граждан в члены кооператива').exists:
+                    elif meeting.questions.filter(
+                            question='Принятие решения о приеме граждан в члены кооператива').exists:
                         meeting.meeting_stage = 'question-reception'
                     else:
                         meeting.meeting_stage = 'preparation'
@@ -310,18 +311,22 @@ def meeting_requirement_initiator_reason(request, meeting_id):
                 return redirect('/meeting_requirement_initiator_reason/' + str(meeting_id))
 
         if form.is_valid() and member_representative_formset.is_valid():
-            represented_members = []
+            initiator_members = []
 
             for member_representative_form in member_representative_formset:
                 cooperative_member = CooperativeMember.objects.get(
                     id=member_representative_form.cleaned_data.get('cooperative_member_id'))
+                is_initiator = member_representative_form.cleaned_data.get('is_initiator')
                 representatives_request = member_representative_form.cleaned_data.get('representatives_request')
                 representative = member_representative_form.cleaned_data.get('representative')
 
                 if cooperative_member and representative and representatives_request == True:
-                    represented_members.append(CooperativeMemberRepresentative(cooperative_meeting=cooperative_meeting,
-                                                                               cooperative_member=cooperative_member,
-                                                                               representative=representative))
+                    initiator_members.append(CooperativeMemberInitiator(cooperative_meeting=cooperative_meeting,
+                                                                        cooperative_member=cooperative_member,
+                                                                        representative=representative))
+                elif cooperative_member and is_initiator == True:
+                    initiator_members.append(CooperativeMemberInitiator(cooperative_meeting=cooperative_meeting,
+                                                                        cooperative_member=cooperative_member))
 
             try:
                 with transaction.atomic():
@@ -330,7 +335,7 @@ def meeting_requirement_initiator_reason(request, meeting_id):
                     meeting.reason = form.cleaned_data.get('reason')
                     meeting.meeting_stage = 'requirement-creation'
                     meeting.save()
-                    CooperativeMemberRepresentative.objects.bulk_create(represented_members)
+                    CooperativeMemberInitiator.objects.bulk_create(initiator_members)
                     return redirect('/meeting_requirement_creation/' + str(meeting_id))
 
             except IntegrityError:

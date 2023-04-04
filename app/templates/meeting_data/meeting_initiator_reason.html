@@ -41,6 +41,13 @@
                                             {% endfor %}
                                         {% endif %}
 
+                                        {{ member_representative_form.is_initiator|as_crispy_field }}
+                                        {% if member_representative_form.is_initiator.errors %}
+                                            {% for error in member_representative_form.is_initiator.errors %}
+                                                {{ error|escape }}
+                                            {% endfor %}
+                                        {% endif %}
+
                                         {{ member_representative_form.representatives_request|as_crispy_field }}
                                         {% if member_representative_form.representatives_request.errors %}
                                             {% for error in member_representative_form.representatives_request.errors %}

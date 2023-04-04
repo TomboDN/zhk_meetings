@@ -7,7 +7,7 @@ from django.forms.formsets import BaseFormSet
 from phonenumber_field.widgets import RegionalPhoneNumberWidget
 
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion, \
-    CooperativeMemberRepresentative
+    CooperativeMemberInitiator
 
 
 class UserRegisterForm(UserCreationForm):
@@ -189,6 +189,8 @@ class MeetingRequirementInitiatorReasonFrom(forms.ModelForm):
 class MemberRepresentativeForm(forms.Form):
     cooperative_member_id = forms.IntegerField()
     cooperative_member = forms.CharField(label='ФИО / наименование', widget=forms.TextInput(attrs={'readonly': 'True'}))
+    is_initiator = forms.BooleanField(label='Член кооператива является инициатором', required=False,
+                                      initial=False)
     representatives_request = forms.BooleanField(label='Требование выдвигает представитель', required=False,
                                                  initial=False)
     representative = forms.CharField(label='ФИО представителя', required=False)
