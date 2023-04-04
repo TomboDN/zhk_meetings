@@ -18,5 +18,5 @@ jobs:
           script: |
             cd zhk_meetings
             git pull
-            docker-compose down
-            docker-compose up -d          
+            docker compose down
+            docker compose up -d          
