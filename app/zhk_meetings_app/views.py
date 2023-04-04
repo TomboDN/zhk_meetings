@@ -16,7 +16,7 @@ from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, Coopera
     ExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
     MemberRepresentativeForm, MeetingCooperativeReorganizationForm, MemberTransferFioForm, ChairmanMemberFioForm, \
     MemberAcceptFioForm
-from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberRepresentative, \
+from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberInitiator, \
     CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
     CooperativeAcceptedMember
 
@@ -265,7 +265,8 @@ def meeting_questions(request, meeting_id):
                         meeting.meeting_stage = 'question-reorganization'
                     elif meeting.questions.filter(question='Прекращение полномочий отдельных членов правления').exists:
                         meeting.meeting_stage = 'question-termination'
-                    elif meeting.questions.filter(question='Принятие решения о приеме граждан в члены кооператива').exists:
+                    elif meeting.questions.filter(
+                            question='Принятие решения о приеме граждан в члены кооператива').exists:
                         meeting.meeting_stage = 'question-reception'
                     else:
                         meeting.meeting_stage = 'preparation'
@@ -310,18 +311,22 @@ def meeting_requirement_initiator_reason(request, meeting_id):
                 return redirect('/meeting_requirement_initiator_reason/' + str(meeting_id))
 
         if form.is_valid() and member_representative_formset.is_valid():
-            represented_members = []
+            initiator_members = []
 
             for member_representative_form in member_representative_formset:
                 cooperative_member = CooperativeMember.objects.get(
                     id=member_representative_form.cleaned_data.get('cooperative_member_id'))
+                is_initiator = member_representative_form.cleaned_data.get('is_initiator')
                 representatives_request = member_representative_form.cleaned_data.get('representatives_request')
                 representative = member_representative_form.cleaned_data.get('representative')
 
                 if cooperative_member and representative and representatives_request == True:
-                    represented_members.append(CooperativeMemberRepresentative(cooperative_meeting=cooperative_meeting,
-                                                                               cooperative_member=cooperative_member,
-                                                                               representative=representative))
+                    initiator_members.append(CooperativeMemberInitiator(cooperative_meeting=cooperative_meeting,
+                                                                        cooperative_member=cooperative_member,
+                                                                        representative=representative))
+                elif cooperative_member and is_initiator == True:
+                    initiator_members.append(CooperativeMemberInitiator(cooperative_meeting=cooperative_meeting,
+                                                                        cooperative_member=cooperative_member))
 
             try:
                 with transaction.atomic():
@@ -330,7 +335,7 @@ def meeting_requirement_initiator_reason(request, meeting_id):
                     meeting.reason = form.cleaned_data.get('reason')
                     meeting.meeting_stage = 'requirement-creation'
                     meeting.save()
-                    CooperativeMemberRepresentative.objects.bulk_create(represented_members)
+                    CooperativeMemberInitiator.objects.bulk_create(initiator_members)
                     return redirect('/meeting_requirement_creation/' + str(meeting_id))
 
             except IntegrityError:
@@ -360,8 +365,17 @@ def meeting_requirement_creation(request, meeting_id):
             requirement = None
             # TODO requirement = create_requirement(meeting)
             requirement = create_requirement(cooperative_meeting, cooperative_members)
-            response = HttpResponse(requirement, content_type='application/octet-stream')
-            response['Content-Disposition'] = f'attachment; filename="Требование о проведении собрания"'
+
+            filename = "Требование.docx"
+            response = HttpResponse(requirement,
+                                    content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            disposition = 'attachment'
+            try:
+                filename.encode('ascii')
+                file_expr = 'filename="{}"'.format(filename)
+            except UnicodeEncodeError:
+                file_expr = "filename*=utf-8''{}".format(quote(filename))
+            response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
             return response
 
         elif 'continue' in request.POST:
@@ -411,7 +425,8 @@ def meeting_requirement_approval(request, meeting_id):
                 return redirect('/meeting_requirement_approval/' + str(meeting_id))
 
             if 'create_decision' in request.POST:
-                requirement = create_decision(meeting)
+                decision_number = 1
+                requirement = create_decision(decision_number, meeting)
                 filename = "Решение о проведении собрания.docx"
                 response = HttpResponse(requirement,
                                         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -620,8 +635,8 @@ def meeting_preparation(request, meeting_id):
                 # TODO notification = create_notification(meeting)
                 notification_number = 1
                 for member in cooperative_members:
-                    notification = docs_filling(meeting.meeting_type, meeting.meeting_format, notification_number,
-                                                member.fio, meeting,
+                    notification = docs_filling(notification_number,
+                                                member.pk, member.fio, meeting,
                                                 files)
                     notification_number += 1
                 filename = "Уведомление.docx"
