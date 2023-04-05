@@ -261,12 +261,12 @@ def meeting_questions(request, meeting_id):
                     meeting.save()
                     if meeting.meeting_type == 'irregular':
                         meeting.meeting_stage = 'requirement-initiator'
-                    elif meeting.questions.filter(question='Принятие решения о реорганизации кооператива').exists:
+                    elif meeting.questions.filter(question='Принятие решения о реорганизации кооператива').exists():
                         meeting.meeting_stage = 'question-reorganization'
-                    elif meeting.questions.filter(question='Прекращение полномочий отдельных членов правления').exists:
+                    elif meeting.questions.filter(question='Прекращение полномочий отдельных членов правления').exists():
                         meeting.meeting_stage = 'question-termination'
                     elif meeting.questions.filter(
-                            question='Принятие решения о приеме граждан в члены кооператива').exists:
+                            question='Принятие решения о приеме граждан в члены кооператива').exists():
                         meeting.meeting_stage = 'question-reception'
                     else:
                         meeting.meeting_stage = 'preparation'
