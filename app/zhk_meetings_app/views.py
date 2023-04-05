@@ -304,11 +304,23 @@ def meeting_requirement_initiator_reason(request, meeting_id):
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
                     meeting.initiator = form.cleaned_data.get('initiator')
                     meeting.reason = form.cleaned_data.get('reason')
-                    meeting.meeting_stage = 'requirement-creation'
-                    meeting.save()
                     if form.cleaned_data.get('initiator') == 'chairman':
-                        return redirect('/meeting_preparation/' + str(meeting_id))
+                        if meeting.questions.filter(question='Принятие решения о реорганизации кооператива').exists():
+                            meeting.meeting_stage = 'question-reorganization'
+                        elif meeting.questions.filter(
+                                question='Прекращение полномочий отдельных членов правления').exists():
+                            meeting.meeting_stage = 'question-termination'
+                        elif meeting.questions.filter(
+                                question='Принятие решения о приеме граждан в члены кооператива').exists():
+                            meeting.meeting_stage = 'question-reception'
+                        else:
+                            meeting.meeting_stage = 'preparation'
+                        meeting.save()
+                        return question_redirect(meeting_id)
+
                     else:
+                        meeting.meeting_stage = 'requirement-creation'
+                        meeting.save()
                         return redirect('/meeting_requirement_creation/' + str(meeting_id))
             except IntegrityError:
                 return redirect('/meeting_requirement_initiator_reason/' + str(meeting_id))
