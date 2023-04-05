@@ -405,8 +405,8 @@ def meeting_requirement_approval(request, meeting_id):
             try:
                 with transaction.atomic():
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
-                    meeting.conduct_decision = conduct_decision
-                    meeting.conduct_reason = conduct_reason
+                    meeting.conduct_decision = conduct_decision == "True"
+                    meeting.conduct_reason = int(conduct_reason)
 
                     if meeting.questions.filter(question='Принятие решения о реорганизации кооператива').exists():
                         meeting.meeting_stage = 'question-reorganization'

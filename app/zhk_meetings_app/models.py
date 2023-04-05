@@ -77,7 +77,7 @@ class CooperativeMeeting(models.Model):
     initiator = models.CharField(max_length=30, choices=INITIATORS)
     reason = models.TextField()
     conduct_decision = models.BooleanField(null=True)
-    conduct_reason = models.CharField(max_length=255)
+    conduct_reason = models.IntegerField(null=True)
     date = models.DateField(null=True)
     time = models.TimeField(null=True)
     place = models.CharField(max_length=255)
