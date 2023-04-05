@@ -72,7 +72,7 @@ def create_decision(decision_number, meeting):
     return file_stream
 
 
-def create_requirement(meeting, members):
+def create_requirement(meeting, members, representatives):
     if meeting.initiator == 'chairman':
         name = meeting.cooperative.chairman_name
         name_type = 'Председатель кооператива:'
@@ -86,13 +86,13 @@ def create_requirement(meeting, members):
         name_type = ''
         sign_name = ''
         for member in members:
-            name += member.fio + '\n'
-            name_type += 'Член Кооператива:\n\n'
-            sign_name += '________________________ ' + member.fio + '\n\n'
-        # for member in representatives:
-        #    name += member.representative + '\n'
-        #    name_type += 'Представитель члена Кооператива:\n'
-        #    sign_name += '________________________ ' + member.representative + '\n\n'
+            name += member + '\n'
+            name_type += 'Член Кооператива:\n\n\n'
+            sign_name += '________________________ ' + member + '\n\n\n'
+        for member in representatives:
+            name += member + '\n'
+            name_type += 'Представитель члена Кооператива:\n\n'
+            sign_name += '________________________ ' + member + '\n\n\n'
 
     today_date = datetime.date.today().strftime("%d.%m.%Y")
 
