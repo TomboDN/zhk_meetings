@@ -306,7 +306,10 @@ def meeting_requirement_initiator_reason(request, meeting_id):
                     meeting.reason = form.cleaned_data.get('reason')
                     meeting.meeting_stage = 'requirement-creation'
                     meeting.save()
-                    return redirect('/meeting_requirement_creation/' + str(meeting_id))
+                    if form.cleaned_data.get('initiator') == 'chairman':
+                        return redirect('/meeting_preparation/' + str(meeting_id))
+                    else:
+                        return redirect('/meeting_requirement_creation/' + str(meeting_id))
             except IntegrityError:
                 return redirect('/meeting_requirement_initiator_reason/' + str(meeting_id))
 

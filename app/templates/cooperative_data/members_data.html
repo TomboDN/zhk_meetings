@@ -21,27 +21,6 @@
                                     {% endfor %}
                                 {% endif %}
 
-                                {{ cooperative_members_form.chairman_name|as_crispy_field }}
-                                {% if cooperative_members_form.chairman_name.errors %}
-                                    {% for error in cooperative_members_form.chairman_name.errors %}
-                                        {{ error|escape }}
-                                    {% endfor %}
-                                {% endif %}
-
-                                {{ cooperative_members_form.auditor_name|as_crispy_field }}
-                                {% if cooperative_members_form.auditor_name.errors %}
-                                    {% for error in cooperative_members_form.auditor_name.errors %}
-                                        {{ error|escape }}
-                                    {% endfor %}
-                                {% endif %}
-
-                                {{ cooperative_members_form.auditor_email_address|as_crispy_field }}
-                                {% if cooperative_members_form.auditor_email_address.errors %}
-                                    {% for error in cooperative_members_form.auditor_email_address.errors %}
-                                        {{ error|escape }}
-                                    {% endfor %}
-                                {% endif %}
-
                                 {{ member_formset.management_form }}
 
                                 {% for member_form in member_formset %}
@@ -69,6 +48,27 @@
                                     {% endfor %}
                                 {% endif %}
 
+                                {{ cooperative_members_form.chairman_name|as_crispy_field }}
+                                {% if cooperative_members_form.chairman_name.errors %}
+                                    {% for error in cooperative_members_form.chairman_name.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+
+                                {{ cooperative_members_form.auditor_name|as_crispy_field }}
+                                {% if cooperative_members_form.auditor_name.errors %}
+                                    {% for error in cooperative_members_form.auditor_name.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+
+                                {{ cooperative_members_form.auditor_email_address|as_crispy_field }}
+                                {% if cooperative_members_form.auditor_email_address.errors %}
+                                    {% for error in cooperative_members_form.auditor_email_address.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+
                                 <button class="btn btn-primary d-block w-100" id="submit" type="submit">
                                     Сохранить и продолжить
                                 </button>
@@ -84,7 +84,7 @@
     <script src="{% static 'jquery.formset.js' %}"></script>
     <script>
         $('.member-formset').formset({
-            addText: 'Добавить пользователя',
+            addText: 'Добавить члена кооператива',
             deleteText: 'Удалить'
         });
     </script>

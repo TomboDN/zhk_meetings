@@ -35,10 +35,10 @@ class UserLoginForm(AuthenticationForm):
 
 
 class CooperativeDataForm(forms.Form):
-    cooperative_name = forms.CharField(label='Наименование ЖК/ЖСК', help_text='Сведения содержатся в Уставе ЖК/ЖСК')
+    cooperative_name = forms.CharField(label='Наименование ЖК', help_text='Сведения содержатся в Уставе ЖК')
     cooperative_itn = forms.CharField(label='ИНН', help_text='Можно узнать на сайте ФНС (www.nalog.gov.ru)')
-    cooperative_address = forms.CharField(label='Адрес ЖК/ЖСК', help_text='Сведения содержатся в Уставе ЖК/ЖСК')
-    cooperative_email_address = forms.EmailField(label='Эл.почта ЖК/ЖСК', widget=forms.EmailInput)
+    cooperative_address = forms.CharField(label='Адрес ЖК', help_text='Сведения содержатся в Уставе ЖК')
+    cooperative_email_address = forms.EmailField(label='Эл.почта ЖК', widget=forms.EmailInput)
     cooperative_telephone_number = PhoneNumberField(label='Номер телефона', region="RU",
                                                     widget=RegionalPhoneNumberWidget(region="RU"))
 
@@ -54,8 +54,8 @@ class CooperativeMembersForm(forms.Form):
                                    help_text='Прикрепите файл .txt с данными в формате "ФИО:email;"',
                                    required=False)
 
-    chairman_name = forms.CharField(label='ФИО Председателя правления ЖК/ЖСК')
-    auditor_name = forms.CharField(label='ФИО ревизора / председателя ревизионной комиссии ЖК/ЖСК')
+    chairman_name = forms.CharField(label='ФИО Председателя правления ЖК')
+    auditor_name = forms.CharField(label='ФИО ревизора / председателя ревизионной комиссии ЖК')
     auditor_email_address = forms.EmailField(label='Почта ревизионной комиссии / ревизора', widget=forms.EmailInput)
 
 
