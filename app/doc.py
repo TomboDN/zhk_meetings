@@ -14,7 +14,7 @@ def strings_creating(elements):
 def create_decision(decision_number, meeting):
     initiators = {
         'chairman': 'правления кооператива',
-        'auditor': 'ревизионная комиссии / ревизора',
+        'auditor': 'ревизионной комиссии / ревизора',
         'members': 'членов кооператива'
     }
 
