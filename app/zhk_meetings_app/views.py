@@ -364,7 +364,22 @@ def meeting_requirement_creation(request, meeting_id):
         if 'create_requirement' in request.POST:
             requirement = None
             # TODO requirement = create_requirement(meeting)
-            requirement = create_requirement(cooperative_meeting, cooperative_members)
+           
+            if cooperative_meeting.initiator == 'members':
+                members = []
+                representatives = []
+                for member in cooperative_members:
+                    representative = CooperativeMemberInitiator.objects.get(cooperative_member=member, 
+                                                                        cooperative_meeting=cooperative_meeting).representative
+                    if representative != '':
+                        representatives.append(representative)
+                    else:
+                        members.append(member.fio)
+            else:
+                members = []
+                representatives = []
+                
+            requirement = create_requirement(cooperative_meeting, members, representatives)
 
             filename = "Требование.docx"
             response = HttpResponse(requirement,
