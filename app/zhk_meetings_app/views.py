@@ -18,7 +18,7 @@ from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, Coopera
     MemberAcceptFioForm
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberInitiator, \
     CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
-    CooperativeAcceptedMember
+    CooperativeAcceptedMember, CooperativeQuestion
 
 
 def register_request(request):
@@ -238,7 +238,8 @@ def meeting_format_request(request, meeting_id):
 def meeting_questions(request, meeting_id):
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
     if meeting.meeting_type == "regular":
-        form = RegularQuestionsForm()
+        form = RegularQuestionsForm(initial={'questions' : CooperativeQuestion.objects.filter(
+                                                                        is_report_approval=True)})
     elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
         form = IntramuralQuestionsForm()
     elif meeting.meeting_type == "irregular" and meeting.meeting_format == "extramural":
@@ -246,7 +247,9 @@ def meeting_questions(request, meeting_id):
 
     if request.method == "POST":
         if meeting.meeting_type == 'regular':
-            form = RegularQuestionsForm(request.POST)
+            form = RegularQuestionsForm(request.POST, 
+                            initial={'questions' : CooperativeQuestion.objects.filter(
+                                                                is_report_approval=True)})
         elif meeting.meeting_type == "irregular" and meeting.meeting_format == 'extramural':
             form = ExtramuralQuestionsForm(request.POST)
         elif meeting.meeting_type == "irregular" and meeting.meeting_format == 'intramural':
