@@ -36,7 +36,7 @@ class UserLoginForm(AuthenticationForm):
 
 class CooperativeDataForm(forms.Form):
     cooperative_name = forms.CharField(label='Наименование ЖК', help_text='Сведения содержатся в Уставе ЖК')
-    cooperative_itn = forms.CharField(label='ИНН', help_text='Можно узнать на сайте ФНС (www.nalog.gov.ru)')
+    cooperative_itn = forms.RegexField(label='ИНН', regex=r'\d{10}|\d{12}', help_text='Можно узнать на сайте ФНС (www.nalog.gov.ru)')
     cooperative_address = forms.CharField(label='Адрес ЖК', help_text='Сведения содержатся в Уставе ЖК')
     cooperative_email_address = forms.EmailField(label='Эл.почта ЖК', widget=forms.EmailInput)
     cooperative_telephone_number = PhoneNumberField(label='Номер телефона', region="RU",

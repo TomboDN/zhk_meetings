@@ -119,7 +119,7 @@ def cooperative_members_data(request):
     user = request.user
     cooperative = Cooperative.objects.filter(cooperative_user=user).first()
 
-    members_form_set = formset_factory(MemberForm, formset=BaseMemberFormSet)
+    members_form_set = formset_factory(MemberForm, formset=BaseMemberFormSet, min_num=4)
 
     cooperative_members = CooperativeMember.objects.filter(cooperative=cooperative).order_by('email_address')
     member_data = [{'fio': x.fio, 'email_address': x.email_address}
