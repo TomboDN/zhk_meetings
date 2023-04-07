@@ -42,4 +42,5 @@ urlpatterns = [
     path('meeting_members_reception/<int:meeting_id>/', zhk_views.meeting_members_reception,
          name='meeting_members_reception'),
     path('meeting_preparation/<int:meeting_id>/', zhk_views.meeting_preparation, name='meeting_preparation'),
+    path('meeting_execution/<int:meeting_id>/', zhk_views.meeting_execution, name='meeting_execution'),
 ]

@@ -15,7 +15,7 @@ from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, Coopera
     IntramuralQuestionsForm, IntramuralPreparationForm, CooperativeMeetingTypeForm, CooperativeMeetingFormatForm, \
     ExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
     MemberRepresentativeForm, MeetingCooperativeReorganizationForm, MemberTransferFioForm, ChairmanMemberFioForm, \
-    MemberAcceptFioForm
+    MemberAcceptFioForm, ExecutionForm, MeetingChairmanAnotherMember
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberInitiator, \
     CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
     CooperativeAcceptedMember, CooperativeQuestion
@@ -81,6 +81,15 @@ def question_redirect(meeting_id):
         return redirect('/meeting_members_reception/' + str(meeting_id))
     elif stage == 'preparation':
         return redirect('/meeting_preparation/' + str(meeting_id))
+    
+def execution_redirect(meeting_id):
+    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    type = meeting.meeting_type
+    format = meeting.meeting_format
+    if type == 'regular' or (type == 'irregular' and format == 'intramural'):
+        return redirect('/meeting_intramural_execution/' + str(meeting_id))
+    elif format == 'extramural':
+        return redirect('/meeting_extramural_execution/' + str(meeting_id))
 
 
 @login_required
@@ -262,6 +271,10 @@ def meeting_questions(request, meeting_id):
                     for question in form.cleaned_data.get('questions'):
                         meeting.questions.add(question)
                     meeting.save()
+                    if meeting.meeting_type == 'regular':
+                        meeting.questions.add(CooperativeQuestion.objects.get(
+                                                    is_report_approval=True).id)
+                        meeting.save()                        
                     if meeting.meeting_type == 'irregular':
                         meeting.meeting_stage = 'requirement-initiator'
                     elif meeting.questions.filter(question='Принятие решения о реорганизации кооператива').exists():
@@ -688,10 +701,67 @@ def meeting_preparation(request, meeting_id):
                 # files = request.FILES.getlist('appendix')
                 send_notification(meeting, files)
 
-                return redirect('/dashboard')
+                return redirect('/meeting_execution')
 
         else:
             return redirect('/intramural_preparation')
 
     return render(request=request, template_name="meeting_data/meeting_preparation.html",
                   context={"form": form, "title": title})
+
+@login_required
+def meeting_execution(request, meeting_id):
+    another_member = formset_factory(MeetingChairmanAnotherMember, formset=BaseFormSet, max_num=1)
+    if request.method == "POST":
+        form = ExecutionForm(request.POST)
+        another_member_field = another_member(request.POST)
+
+        if form.is_valid() and form.cleaned_data.get('meeting_chairman_type') != 'member':
+            try:
+                with transaction.atomic():
+                    cooperative = Cooperative.objects.get(cooperative_user=request.user)
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    meeting.meeting_chairman = cooperative.chairman_name
+                    meeting.vote_counter = form.cleaned_data.get('vote_counter')
+                    meeting.secretary = form.cleaned_data.get('secretary')
+                    meeting.save()
+
+            except IntegrityError:
+                return redirect('/meeting_execution/' + str(meeting_id))
+            
+            #return execution_redirect(meeting_id)
+            return redirect('/dashboard')
+        
+        if form.is_valid() and another_member_field.is_valid():
+            meeting_chairman = ''
+
+            for another_member_form in another_member_field:
+                meeting_chairman = another_member_form.cleaned_data.get('another_member')
+
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    meeting.meeting_chairman = meeting_chairman
+                    meeting.vote_counter = form.cleaned_data.get('vote_counter')
+                    meeting.secretary = form.cleaned_data.get('secretary')
+                    meeting.save()
+
+            except IntegrityError:
+                return redirect('/meeting_execution/' + str(meeting_id))
+            
+            #return execution_redirect(meeting_id)
+            return redirect('/dashboard')
+
+        else:
+            return redirect('/meeting_execution' + str(meeting_id))
+    else:
+        another_member_field = another_member()
+    form = ExecutionForm()
+    context = {
+        'form': form,
+        'another_member': another_member_field,
+    }
+
+    return render(request=request, template_name="meeting_data/meeting_execution.html",
+                  context=context)
+

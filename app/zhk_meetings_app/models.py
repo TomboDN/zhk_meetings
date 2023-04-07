@@ -34,6 +34,11 @@ INITIATORS = [
         ('members', 'Члены кооператива')
     ]
 
+MEETING_CHAIRMANS = [
+    ('chairman', 'Председатель правления'),
+    ('member', 'Другое лицо')
+]
+
 
 class Cooperative(models.Model):
     cooperative_user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -81,6 +86,9 @@ class CooperativeMeeting(models.Model):
     date = models.DateField(null=True)
     time = models.TimeField(null=True)
     place = models.CharField(max_length=255)
+    meeting_chairman = models.CharField(max_length=255, choices=MEETING_CHAIRMANS)
+    vote_counter = models.CharField(max_length=255)
+    secretary = models.CharField(max_length=255)
 
 
 class CooperativeMemberInitiator(models.Model):

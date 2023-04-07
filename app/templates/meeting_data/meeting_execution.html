@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <section class="py-4 py-xl-5" style="height: 377.725px;">
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <div class="col-auto">
+                    <div class="card mb-5">
+                        <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
+                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Стадия
+                                проведения собрания</h2>
+                            <form method="post">
+                                {% csrf_token %}
+
+                                {{ form.meeting_chairman_type|as_crispy_field }}
+                                {% if form.meeting_chairman.errors %}
+                                    {% for error in form.meeting_chairman.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+
+                                <div id="another_member" style="display: none;">
+                                    {{ another_member.management_form }}
+                                
+                                {% for another_member_form in another_member %}
+
+                                    <div class="another-member-formset justify-content-left align-content-left">
+                                        {{ another_member_form.another_member|as_crispy_field }}
+                                        {% if another_member_form.another_member.errors %}
+                                            {% for error in another_member_form.another_member.errors %}
+                                                {{ error|escape }}
+                                            {% endfor %}
+                                        {% endif %}            
+                                    </div>
+
+                                {% endfor %}
+
+                                {% if another_member.non_form_errors %}
+                                    {% for error in another_member.non_form_errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                </div>
+
+                                {{ form.vote_counter|as_crispy_field }}
+                                {% if form.vote_counter.errors %}
+                                    {% for error in form.vote_counter.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+
+                                {{ form.secretary|as_crispy_field }}
+                                {% if form.secretary.errors %}
+                                    {% for error in form.secretary.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                <button class="btn btn-primary d-block w-100" id="submit" type="submit">
+                                    Сохранить и продолжить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        function check() {
+            console.log(document.getElementById("id_meeting_chairman_type").value)
+            if (document.getElementById("id_meeting_chairman_type").value == 'member') {
+                document.getElementById("another_member").style.display = "block";
+            } else {
+                document.getElementById("another_member").style.display = "none";
+            }
+        }
+    </script>
+{% endblock content %}
