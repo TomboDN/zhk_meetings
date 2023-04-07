@@ -7,7 +7,12 @@ from django.forms.formsets import BaseFormSet
 from phonenumber_field.widgets import RegionalPhoneNumberWidget
 
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion, \
-    CooperativeMemberInitiator
+    CooperativeMemberInitiator, CooperativeMeetingBoardMemberCandidate
+
+DECISION_CHOICE = [
+    ('True', 'Решение принято'),
+    ('False', 'Решение не принято'),
+]
 
 
 class UserRegisterForm(UserCreationForm):
@@ -36,7 +41,8 @@ class UserLoginForm(AuthenticationForm):
 
 class CooperativeDataForm(forms.Form):
     cooperative_name = forms.CharField(label='Наименование ЖК', help_text='Сведения содержатся в Уставе ЖК')
-    cooperative_itn = forms.RegexField(label='ИНН', regex=r'\d{10}|\d{12}', help_text='Можно узнать на сайте ФНС (www.nalog.gov.ru)')
+    cooperative_itn = forms.RegexField(label='ИНН', regex=r'\d{10}|\d{12}',
+                                       help_text='Можно узнать на сайте ФНС (www.nalog.gov.ru)')
     cooperative_address = forms.CharField(label='Адрес ЖК', help_text='Сведения содержатся в Уставе ЖК')
     cooperative_email_address = forms.EmailField(label='Эл.почта ЖК', widget=forms.EmailInput)
     cooperative_telephone_number = PhoneNumberField(label='Номер телефона', region="RU",
@@ -138,7 +144,6 @@ class SelectWithDisabledOptions(forms.CheckboxSelectMultiple):
         super(SelectWithDisabledOptions, self).__init__(*args, **kwargs)
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
-        
         option_dict = super(SelectWithDisabledOptions, self).create_option(
             name, value, label, selected, index, subindex=subindex, attrs=attrs
         )
@@ -149,9 +154,9 @@ class SelectWithDisabledOptions(forms.CheckboxSelectMultiple):
 
 class RegularQuestionsForm(forms.ModelForm):
     questions = forms.ModelMultipleChoiceField(label='Вопросы, которые можно рассматривать на очередном собрании',
-                                    widget=SelectWithDisabledOptions(disabled_choices=None),
-                                    queryset=CooperativeQuestion.objects.filter(
-                                    is_available_for_regular_meeting=True), required=False)
+                                               widget=SelectWithDisabledOptions(disabled_choices=None),
+                                               queryset=CooperativeQuestion.objects.filter(
+                                                   is_available_for_regular_meeting=True), required=False)
     additional_question = forms.CharField(label='Другой вопрос', help_text='Ввести вручную', required=False)
     additional_question.disabled = True
 
@@ -302,13 +307,15 @@ class ExtramuralPreparationForm(forms.ModelForm):
         model = CooperativeMeeting
         fields = ['date', 'time']
 
+
 class ExecutionForm(forms.ModelForm):
     MEETING_CHAIRMANS = [
         ('chairman', 'Председатель правления'),
         ('member', 'Другое лицо')
     ]
-    meeting_chairman_type = forms.ChoiceField(label='Укажите председательствующего на собрании', 
-                                choices=MEETING_CHAIRMANS, widget=forms.Select(attrs={'onchange': 'check()'}))
+    meeting_chairman_type = forms.ChoiceField(label='Укажите председательствующего на собрании',
+                                              choices=MEETING_CHAIRMANS,
+                                              widget=forms.Select(attrs={'onchange': 'check()'}))
     vote_counter = forms.CharField(label='Укажите ответственного за подсчёт голосов',
                                    help_text='Введите ФИО')
     secretary = forms.CharField(label='Укажите секретаря собрания', help_text='Введите ФИО')
@@ -317,5 +324,46 @@ class ExecutionForm(forms.ModelForm):
         model = CooperativeMeeting
         fields = ['vote_counter', 'secretary']
 
+
 class MeetingChairmanAnotherMember(forms.Form):
     another_member = forms.CharField(label='Другое лицо', help_text='Введите ФИО')
+
+
+class ExecutionCooperativeReorganizationForm(forms.Form):
+    tszh_name = forms.CharField(label='Укажите наименование создаваемого ТСЖ', help_text='Введите название')
+    tszh_place = forms.CharField(label='Укажите место нахождения создаваемого ТСЖ', help_text='Введите адрес')
+
+
+class ExecutionQuestionInfoForm(forms.Form):
+    speaker = forms.CharField(label='По вопросу выступил', help_text='ФИО')
+    theses = forms.CharField(label='Основные тезисы выступления', help_text='Основные тезисы', widget=forms.Textarea)
+
+
+class ExecutionAskedQuestion(forms.Form):
+    question = forms.CharField(label='Были заданы вопросы:')
+
+
+class ExecutionVoting(forms.Form):
+    votes_for = forms.IntegerField(required=False, min_value=1)
+    votes_against = forms.IntegerField(required=False, min_value=1)
+    votes_abstained = forms.IntegerField(required=False, min_value=1)
+    decision = forms.ChoiceField(choices=DECISION_CHOICE, widget=forms.Select)
+
+
+class BoardMembersCandidate(forms.Form):
+    fio = forms.CharField(label='Укажите кандидатов на должности членов правления')
+
+
+class BoardMembersForm(forms.Form):
+    chosen_candidates_limit = forms.IntegerField(label='Укажите количество кандидатов, которые должны быть выбраны',
+                                                 min_value=1)
+
+
+class ExecutionFIOVoting(forms.Form):
+    votes_abstained = forms.IntegerField(required=False, min_value=1)
+    decision = forms.ChoiceField(choices=DECISION_CHOICE, widget=forms.Select)
+
+
+class MemberVotes(forms.Form):
+    fio = forms.CharField(disabled=True, required=False)
+    votes_for = forms.IntegerField(required=False, min_value=1)

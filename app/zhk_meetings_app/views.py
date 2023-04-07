@@ -15,10 +15,10 @@ from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, Coopera
     IntramuralQuestionsForm, IntramuralPreparationForm, CooperativeMeetingTypeForm, CooperativeMeetingFormatForm, \
     ExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
     MemberRepresentativeForm, MeetingCooperativeReorganizationForm, MemberTransferFioForm, ChairmanMemberFioForm, \
-    MemberAcceptFioForm, ExecutionForm, MeetingChairmanAnotherMember
+    MemberAcceptFioForm, ExecutionForm, MeetingChairmanAnotherMember, ExecutionAskedQuestion
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberInitiator, \
     CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
-    CooperativeAcceptedMember, CooperativeQuestion
+    CooperativeAcceptedMember, CooperativeQuestion, CooperativeMeetingAskedQuestion, CooperativeMeetingSubQuestion
 
 
 def register_request(request):
@@ -765,3 +765,38 @@ def meeting_execution(request, meeting_id):
     return render(request=request, template_name="meeting_data/meeting_execution.html",
                   context=context)
 
+
+# def execution_common_info(request, meeting_id):
+#     cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+#     questions_form_set = formset_factory(ExecutionAskedQuestion, formset=BaseFormSet)
+#
+#     if request.method == "POST":
+#
+#         questions_formset = questions_form_set(request.POST)
+#
+#         if questions_formset.is_valid():
+#             questions_list = []
+#
+#             for question_form in questions_formset:
+#                 question = question_form.cleaned_data.get('question')
+#                 questions_list.append(
+#                     CooperativeMeetingAskedQuestion(sub_question=sub_question, question=question))
+#
+#             try:
+#                 with transaction.atomic():
+#                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
+#                     CooperativeMeetingAskedQuestion.objects.bulk_create(questions_list)
+#                     meeting.meeting_stage = 'preparation'
+#                     meeting.save()
+#                     return redirect('/meeting_preparation/' + str(meeting_id))
+#
+#             except IntegrityError:
+#                 return redirect('/meeting_members_reception/' + str(meeting_id))
+#         else:
+#             return redirect('/meeting_members_reception/' + str(meeting_id))
+#     else:
+#         questions_formset = questions_form_set()
+#     context = {
+#         'questions_formset': questions_formset,
+#     }
+#     return render(request=request, template_name="meeting_data/execution/common_info.html", context=context)
