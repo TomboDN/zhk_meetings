@@ -6,8 +6,8 @@ from phonenumber_field.formfields import PhoneNumberField
 from django.forms.formsets import BaseFormSet
 from phonenumber_field.widgets import RegionalPhoneNumberWidget
 
-from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion, \
-    CooperativeMemberInitiator, CooperativeMeetingBoardMemberCandidate
+from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion
+
 
 DECISION_CHOICE = [
     ('True', 'Решение принято'),
@@ -367,3 +367,27 @@ class ExecutionFIOVoting(forms.Form):
 class MemberVotes(forms.Form):
     fio = forms.CharField(disabled=True, required=False)
     votes_for = forms.IntegerField(required=False, min_value=1)
+
+
+class BaseMemberVoteFormSet(BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+
+        fio_list = []
+        duplicates = False
+
+        for form in self.forms:
+            if form.cleaned_data:
+                fio = form.cleaned_data['fio']
+
+                if fio:
+                    if fio in fio_list:
+                        duplicates = True
+                    fio_list.append(fio)
+
+                if duplicates:
+                    raise forms.ValidationError(
+                        'Фио участников повторяются',
+                        code='duplicate_fio'
+                    )

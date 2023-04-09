@@ -99,6 +99,7 @@ class CooperativeMemberInitiator(models.Model):
 
 class CooperativeReorganizationAcceptedMember(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    sequential_id = models.IntegerField(null=True)
     fio = models.CharField(max_length=255)
 
 
@@ -120,6 +121,9 @@ class CooperativeAcceptedMember(models.Model):
 
 class CooperativeMeetingSubQuestion(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    question_id = models.IntegerField(null=True)
+    sub_question_id = models.IntegerField(null=True)
+    title = models.CharField(max_length=255)
     sub_question = models.CharField(max_length=255)
     speaker = models.CharField(max_length=255)
     theses = models.CharField(max_length=255)
@@ -143,8 +147,6 @@ class CooperativeMeetingMemberCandidate(models.Model):
 
 
 class CooperativeMeetingTSZH(models.Model):
-    sub_question = models.ForeignKey(CooperativeMeetingSubQuestion, on_delete=models.CASCADE)
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     place = models.CharField(max_length=255)
-
-
