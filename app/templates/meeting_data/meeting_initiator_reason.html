@@ -9,7 +9,7 @@
                     <div class="card mb-5">
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
                             <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Требование о
-                                проведении собрания (для внеочередных собраний)</h2>
+                                проведении собрания</h2>
                             <form method="post">
                                 {% csrf_token %}
 
@@ -31,7 +31,7 @@
 
                                 {% for member_representative_form in member_representative_formset %}
 
-                                    <div class="member-formset d-flex flex-row justify-content-center align-items-center align-content-center">
+                                    <div class="member-formset d-flex flex-row justify-content-between align-items-center align-content-center">
                                         {{ member_representative_form.cooperative_member_id.as_hidden }}
 
                                         {{ member_representative_form.cooperative_member|as_crispy_field }}
@@ -44,20 +44,6 @@
                                         {{ member_representative_form.is_initiator|as_crispy_field }}
                                         {% if member_representative_form.is_initiator.errors %}
                                             {% for error in member_representative_form.is_initiator.errors %}
-                                                {{ error|escape }}
-                                            {% endfor %}
-                                        {% endif %}
-
-                                        {{ member_representative_form.representatives_request|as_crispy_field }}
-                                        {% if member_representative_form.representatives_request.errors %}
-                                            {% for error in member_representative_form.representatives_request.errors %}
-                                                {{ error|escape }}
-                                            {% endfor %}
-                                        {% endif %}
-
-                                        {{ member_representative_form.representative|as_crispy_field }}
-                                        {% if member_representative_form.representative.errors %}
-                                            {% for error in member_representative_form.representative.errors %}
                                                 {{ error|escape }}
                                             {% endfor %}
                                         {% endif %}

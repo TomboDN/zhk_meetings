@@ -30,7 +30,7 @@
 
                                 {% for accepted_member_form in accepted_members_formset %}
 
-                                    <div class="member-formset d-flex flex-row justify-content-center align-items-center align-content-center">
+                                    <div class="member-formset d-flex flex-row justify-content-around align-items-center align-content-center">
                                         {{ accepted_member_form.fio|as_crispy_field }}
                                         {% if accepted_member_form.fio.errors %}
                                             {% for error in accepted_member_form.fio.errors %}

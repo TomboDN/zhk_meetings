@@ -45,7 +45,8 @@ class CooperativeDataForm(forms.Form):
     cooperative_address = forms.CharField(label='Адрес ЖК', help_text='Сведения содержатся в Уставе ЖК')
     cooperative_email_address = forms.EmailField(label='Эл.почта ЖК', widget=forms.EmailInput)
     cooperative_telephone_number = PhoneNumberField(label='Номер телефона', region="RU",
-                                                    widget=RegionalPhoneNumberWidget(region="RU"))
+                                                    widget=RegionalPhoneNumberWidget(region="RU"),
+                                                    help_text='В формате +7ХХХХХХХХХХ или 8 (ХХХ) ХХХ-ХХ-ХХ')
 
     class Meta:
         model = Cooperative
@@ -54,7 +55,7 @@ class CooperativeDataForm(forms.Form):
 
 
 class CooperativeMembersForm(forms.Form):
-    members_file = forms.FileField(label='Поле для загрузки документа с данными членов кооператива',
+    members_file = forms.FileField(label='Загрузите файл со сведениями о членах кооператива',
                                    widget=forms.FileInput,
                                    help_text='Прикрепите файл .txt с данными в формате "ФИО:email;"',
                                    required=False)
@@ -94,18 +95,18 @@ class BaseMemberFormSet(BaseFormSet):
 
                 if duplicates:
                     raise forms.ValidationError(
-                        'Links must have unique anchors and URLs.',
-                        code='duplicate_links'
+                        'Адреса электронной почты должны быть уникальными.',
+                        code='duplicate_emails'
                     )
 
                 if email_address and not fio:
                     raise forms.ValidationError(
-                        'All links must have an fio.',
+                        'У всех членов кооператива должно быть ФИО.',
                         code='missing_fio'
                     )
                 elif fio and not email_address:
                     raise forms.ValidationError(
-                        'All links must have an email_address.',
+                        'У всех членов кооператива должен быть адрес электронной почты.',
                         code='missing_email'
                     )
 
@@ -236,11 +237,9 @@ class MeetingRequirementInitiatorReasonFrom(forms.ModelForm):
 class MemberRepresentativeForm(forms.Form):
     cooperative_member_id = forms.IntegerField()
     cooperative_member = forms.CharField(label='ФИО / наименование', widget=forms.TextInput(attrs={'readonly': 'True'}))
+
     is_initiator = forms.BooleanField(label='Член кооператива является инициатором', required=False,
                                       initial=False)
-    representatives_request = forms.BooleanField(label='Требование выдвигает представитель', required=False,
-                                                 initial=False)
-    representative = forms.CharField(label='ФИО представителя', required=False)
 
 
 class MeetingApprovalForm(forms.Form):
@@ -312,8 +311,9 @@ class ExecutionForm(forms.ModelForm):
         ('chairman', 'Председатель правления'),
         ('member', 'Другое лицо')
     ]
-    meeting_chairman_type = forms.ChoiceField(label='Укажите председательствующего на собрании', 
-                                choices=MEETING_CHAIRMANS, widget=forms.Select(attrs={'onchange': 'check()'}))
+    meeting_chairman_type = forms.ChoiceField(label='Укажите председательствующего на собрании',
+                                              choices=MEETING_CHAIRMANS,
+                                              widget=forms.Select(attrs={'onchange': 'check()'}))
     another_member = forms.CharField(label='Другое лицо', help_text='Введите ФИО', required=False)
     vote_counter = forms.CharField(label='Укажите ответственного за подсчёт голосов',
                                    help_text='Введите ФИО')

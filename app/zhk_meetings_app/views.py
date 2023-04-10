@@ -290,7 +290,7 @@ def cooperative_members_data(request):
     user = request.user
     cooperative = Cooperative.objects.filter(cooperative_user=user).first()
 
-    members_form_set = formset_factory(MemberForm, formset=BaseMemberFormSet, min_num=4)
+    members_form_set = formset_factory(MemberForm, formset=BaseMemberFormSet, min_num=5, extra=0)
 
     cooperative_members = CooperativeMember.objects.filter(cooperative=cooperative).order_by('email_address')
     member_data = [{'fio': x.fio, 'email_address': x.email_address}
@@ -511,19 +511,14 @@ def meeting_requirement_initiator_reason(request, meeting_id):
                 cooperative_member = CooperativeMember.objects.get(
                     id=member_representative_form.cleaned_data.get('cooperative_member_id'))
                 is_initiator = member_representative_form.cleaned_data.get('is_initiator')
-                representatives_request = member_representative_form.cleaned_data.get('representatives_request')
-                representative = member_representative_form.cleaned_data.get('representative')
 
-                if cooperative_member and representative and representatives_request == True:
-                    initiator_members.append(CooperativeMemberInitiator(cooperative_meeting=cooperative_meeting,
-                                                                        cooperative_member=cooperative_member,
-                                                                        representative=representative))
-                elif cooperative_member and is_initiator == True:
+                if cooperative_member and is_initiator == True:
                     initiator_members.append(CooperativeMemberInitiator(cooperative_meeting=cooperative_meeting,
                                                                         cooperative_member=cooperative_member))
 
             try:
                 with transaction.atomic():
+                    print('tr')
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
                     meeting.initiator = form.cleaned_data.get('initiator')
                     meeting.reason = form.cleaned_data.get('reason')
@@ -533,6 +528,7 @@ def meeting_requirement_initiator_reason(request, meeting_id):
                     return redirect('/meeting_requirement_creation/' + str(meeting_id))
 
             except IntegrityError:
+                print('err')
                 return redirect('/meeting_requirement_initiator_reason/' + str(meeting_id))
         else:
             return redirect('/meeting_requirement_initiator_reason/' + str(meeting_id))
@@ -556,24 +552,14 @@ def meeting_requirement_creation(request, meeting_id):
         return redirect('/meeting_preparation/' + str(meeting_id))
     if request.method == "POST":
         if 'create_requirement' in request.POST:
-            requirement = None
-            # TODO requirement = create_requirement(meeting)
-
             if cooperative_meeting.initiator == 'members':
                 members = []
-                representatives = []
                 for member in cooperative_members:
-                    representative = CooperativeMemberInitiator.objects.get(cooperative_member=member,
-                                                                            cooperative_meeting=cooperative_meeting).representative
-                    if representative != '':
-                        representatives.append(representative)
-                    else:
-                        members.append(member.fio)
+                    members.append(member.fio)
             else:
                 members = []
-                representatives = []
 
-            requirement = create_requirement(cooperative_meeting, members, representatives)
+            requirement = create_requirement(cooperative_meeting, members)
 
             filename = "Требование.docx"
             response = HttpResponse(requirement,
@@ -901,7 +887,7 @@ def meeting_preparation(request, meeting_id):
             return redirect('/intramural_preparation')
 
     return render(request=request, template_name="meeting_data/meeting_preparation.html",
-                  context={"form": form, "title": title})
+                  context={"form": form, "title": title, 'm_id': meeting_id,})
 
 
 @login_required

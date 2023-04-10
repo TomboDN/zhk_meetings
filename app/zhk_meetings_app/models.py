@@ -91,7 +91,6 @@ class CooperativeMeeting(models.Model):
 class CooperativeMemberInitiator(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
     cooperative_member = models.ForeignKey(CooperativeMember, on_delete=models.CASCADE)
-    representative = models.CharField(max_length=255)
 
 
 class CooperativeReorganizationAcceptedMember(models.Model):
