@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <section class="py-4 py-xl-5" style="height: 377.725px;">
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-8 col-lg-6 col-xl-5 col-xxl-5">
+                    <div class="card mb-5">
+                        <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
+                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Стадия принятия решения</h2>
+                            <form method="post">
+                                {% csrf_token %}
+                                <div>
+                                    <button class="btn btn-primary d-block w-100" name="create_protocol"
+                                            id="create_protocol" type="submit" style="margin-top: 40px; margin-bottom: 30px;">
+                                        Сформировать протокол
+                                    </button>
+                                    <button class="btn btn-primary d-block w-100" name="send_protocol" id="send_protocol"
+                                            type="submit" style="margin-top: 40px; margin-bottom: 30px;">
+                                        Отправить
+                                    </button>
+                                    <button class="btn btn-primary d-block w-100" name="finish" id="finish"
+                                            type="submit">
+                                        Завершить
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}

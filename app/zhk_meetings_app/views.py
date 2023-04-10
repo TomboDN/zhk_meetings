@@ -15,10 +15,13 @@ from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, Coopera
     IntramuralQuestionsForm, IntramuralPreparationForm, CooperativeMeetingTypeForm, CooperativeMeetingFormatForm, \
     ExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
     MemberRepresentativeForm, MeetingCooperativeReorganizationForm, MemberTransferFioForm, ChairmanMemberFioForm, \
-    MemberAcceptFioForm, ExecutionForm
+    MemberAcceptFioForm, ExecutionForm, MeetingChairmanAnotherMember, ExecutionAskedQuestion, ExecutionQuestionInfoForm, \
+    ExecutionVoting, ExecutionFIOVoting, MemberVotes, ExecutionCooperativeReorganizationForm, BoardMembersCandidate, \
+    BaseMemberVoteFormSet, BoardMembersForm, ExecutionTerminationDateForm, MeetingFinishDateForm
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberInitiator, \
     CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
-    CooperativeAcceptedMember, CooperativeQuestion
+    CooperativeAcceptedMember, CooperativeQuestion, CooperativeMeetingAskedQuestion, CooperativeMeetingSubQuestion, \
+    CooperativeMeetingMemberCandidate, CooperativeMeetingTSZH
 
 
 def register_request(request):
@@ -81,7 +84,8 @@ def question_redirect(meeting_id):
         return redirect('/meeting_members_reception/' + str(meeting_id))
     elif stage == 'preparation':
         return redirect('/meeting_preparation/' + str(meeting_id))
-    
+
+
 def execution_redirect(meeting_id):
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
     type = meeting.meeting_type
@@ -90,6 +94,164 @@ def execution_redirect(meeting_id):
         return redirect('/meeting_intramural_execution/' + str(meeting_id))
     elif format == 'extramural':
         return redirect('/meeting_extramural_execution/' + str(meeting_id))
+
+
+def sub_question_init(meeting_id):
+    sub_questions_list = []
+    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    meeting_questions_object = meeting.questions.all()
+    for question in meeting_questions_object:
+        if question.id == 6:
+            sub_question = f"1. Принятие решения о реорганизации кооператива “{meeting.cooperative.cooperative_name}” в форме преобразования в товарищество собственников жилья."
+        elif question.id == 11:
+            if CooperativeTerminatedMember.objects.filter(cooperative_meeting=meeting,
+                                                          sequential_id=1).exists():
+                member = CooperativeTerminatedMember.objects.get(cooperative_meeting=meeting,
+                                                                 sequential_id=1)
+                sub_question = f"1. Досрочное прекращение полномочий члена правления ЖК «{meeting.cooperative.cooperative_name}» {member.fio}"
+            else:
+                continue
+        elif question.id == 20:
+            if CooperativeAcceptedMember.objects.filter(cooperative_meeting=meeting,
+                                                        sequential_id=1).exists():
+                member = CooperativeAcceptedMember.objects.get(cooperative_meeting=meeting,
+                                                               sequential_id=1)
+                sub_question = f"1. Принятие в члены жилищного кооператива “{meeting.cooperative.cooperative_name}” {member.fio}"
+            else:
+                continue
+        else:
+            sub_question = ""
+        sub_questions_list.append(
+            CooperativeMeetingSubQuestion(cooperative_meeting=meeting, question_id=question.id, sub_question_id=1,
+                                          title=question.question, sub_question=sub_question))
+    try:
+        with transaction.atomic():
+            CooperativeMeetingSubQuestion.objects.bulk_create(sub_questions_list)
+    except IntegrityError:
+        return sub_question_init(meeting_id)
+    first_sub_question = CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting).first()
+    if first_sub_question:
+        return execution_sub_question_redirect(meeting_id, first_sub_question.question_id,
+                                               first_sub_question.sub_question_id)
+    else:
+        return redirect('/meeting_finish/' + str(meeting_id))
+
+
+def sub_question_create(meeting_id, question_id, sub_question_id):
+    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    sub_question_first = CooperativeMeetingSubQuestion.objects.get(cooperative_meeting=meeting,
+                                                                   question_id=question_id,
+                                                                   sub_question_id=1)
+    if question_id == 6:
+        tszh_data = CooperativeMeetingTSZH.objects.get(cooperative_meeting=meeting)
+        if sub_question_id > 1 and sub_question_first.decision == False:
+            if CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting,
+                                                            decision__isnull=True).exists():
+                sub_question_object = CooperativeMeetingSubQuestion.objects.get(cooperative_meeting=meeting,
+                                                                                decision__isnull=True)
+                return execution_sub_question_redirect(meeting_id, sub_question_object.question_id,
+                                                       sub_question_object.sub_question_id)
+            else:
+                return redirect('/meeting_finish/' + str(meeting_id))
+        if sub_question_id == 2:
+            sub_question = "2. Утверждения порядка реорганизации Кооператива в форме преобразования"
+        elif sub_question_id == 3:
+            sub_question = "3. Утверждение передаточного акта, актов инвентаризации и иных документов бухгалтерского учета"
+        elif sub_question_id == 4:
+            sub_question = f"4. Утверждение Устава товарищества собственников жилья “{tszh_data.name}”"
+        elif sub_question_id == 5:
+            sub_question = f"5. Избрание Правления товарищества собственников жилья “{tszh_data.name}”"
+        elif sub_question_id == 6:
+            sub_question = f"6. Избрание Председателя Правления товарищества собственников жилья “{tszh_data.name}” из числа членов Правления"
+        elif sub_question_id == 7:
+            reorganization_data = CooperativeMeetingReorganization.objects.get(cooperative_meeting=meeting)
+            sub_question = f"7. Принятие решения о государственной регистрации преобразования жилищного кооператива “{meeting.cooperative.cooperative_name}” в товарищество собственников жилья “{tszh_data.name}” и назначении ответственным за подачу документов в регистрирующий орган “{reorganization_data.responsible_name}”"
+        elif sub_question_id > 7:
+            if CooperativeReorganizationAcceptedMember.objects.filter(cooperative_meeting=meeting,
+                                                                      sequential_id=sub_question_id - 7).exists():
+                member = CooperativeReorganizationAcceptedMember.objects.get(cooperative_meeting=meeting,
+                                                                             sequential_id=sub_question_id - 7)
+                sub_question = f"{sub_question_id}. Принятие “{member.fio}” в члены товарищества собственников жилья “{tszh_data.name}”."
+            else:
+                if CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting,
+                                                                decision__isnull=True).exists():
+                    sub_question_object = CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting,
+                                                                                       decision__isnull=True).first()
+                    return execution_sub_question_redirect(meeting_id, sub_question_object.question_id,
+                                                           sub_question_object.sub_question_id)
+                else:
+                    return redirect('/meeting_finish/' + str(meeting_id))
+
+    elif question_id == 11:
+        if sub_question_id > 1:
+            if CooperativeTerminatedMember.objects.filter(cooperative_meeting=meeting,
+                                                          sequential_id=sub_question_id).exists():
+                member = CooperativeTerminatedMember.objects.get(cooperative_meeting=meeting,
+                                                                 sequential_id=sub_question_id)
+                sub_question = f"{sub_question_id}. Досрочное прекращение полномочий члена правления ЖК «{meeting.cooperative.cooperative_name}» {member.fio}"
+            else:
+                if CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting,
+                                                                decision__isnull=True).exists():
+                    sub_question_object = CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting,
+                                                                                       decision__isnull=True).first()
+                    return execution_sub_question_redirect(meeting_id, sub_question_object.question_id,
+                                                           sub_question_object.sub_question_id)
+                else:
+                    return redirect('/meeting_finish/' + str(meeting_id))
+    elif question_id == 20:
+        if sub_question_id > 1:
+            if CooperativeAcceptedMember.objects.filter(cooperative_meeting=meeting,
+                                                        sequential_id=sub_question_id).exists():
+                member = CooperativeAcceptedMember.objects.get(cooperative_meeting=meeting,
+                                                               sequential_id=sub_question_id)
+                sub_question = f"{sub_question_id}. Принятие в члены жилищного кооператива “{meeting.cooperative.cooperative_name}” {member.fio}"
+            else:
+                if CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting,
+                                                                decision__isnull=True).exists():
+                    sub_question_object = CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting,
+                                                                                       decision__isnull=True).first()
+                    return execution_sub_question_redirect(meeting_id, sub_question_object.question_id,
+                                                           sub_question_object.sub_question_id)
+                else:
+                    return redirect('/meeting_finish/' + str(meeting_id))
+    try:
+        with transaction.atomic():
+            CooperativeMeetingSubQuestion.objects.create(cooperative_meeting=meeting,
+                                                         question_id=question_id,
+                                                         sub_question_id=sub_question_id,
+                                                         title=sub_question_first.title,
+                                                         sub_question=sub_question)
+    except IntegrityError:
+        return sub_question_create(meeting_id, question_id, sub_question_id)
+
+    return execution_sub_question_redirect(meeting_id, question_id, sub_question_id)
+
+
+def execution_sub_question_redirect(meeting_id, question_id, sub_question_id):
+    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+
+    if question_id in [16] and sub_question_id > 1:
+        if CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting,
+                                                        decision__isnull=True).exists():
+            sub_question_object = CooperativeMeetingSubQuestion.objects.get(cooperative_meeting=meeting,
+                                                                            decision__isnull=True)
+            return execution_sub_question_redirect(meeting_id, sub_question_object.question_id,
+                                                   sub_question_object.sub_question_id)
+        else:
+            return redirect('/meeting_finish/' + str(meeting_id))
+
+    if CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting,
+                                                    question_id=question_id,
+                                                    sub_question_id=sub_question_id,
+                                                    decision__isnull=True).exists():
+        if question_id == 6 and (sub_question_id == 1 or sub_question_id == 5):
+            return redirect(
+                '/execution_before_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+        else:
+            return redirect(
+                '/execution_common_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+    else:
+        return sub_question_create(meeting_id, question_id, sub_question_id)
 
 
 @login_required
@@ -247,8 +409,8 @@ def meeting_format_request(request, meeting_id):
 def meeting_questions(request, meeting_id):
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
     if meeting.meeting_type == "regular":
-        form = RegularQuestionsForm(initial={'questions' : CooperativeQuestion.objects.filter(
-                                                                        is_report_approval=True)})
+        form = RegularQuestionsForm(initial={'questions': CooperativeQuestion.objects.filter(
+            is_report_approval=True)})
     elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
         form = IntramuralQuestionsForm()
     elif meeting.meeting_type == "irregular" and meeting.meeting_format == "extramural":
@@ -256,9 +418,9 @@ def meeting_questions(request, meeting_id):
 
     if request.method == "POST":
         if meeting.meeting_type == 'regular':
-            form = RegularQuestionsForm(request.POST, 
-                            initial={'questions' : CooperativeQuestion.objects.filter(
-                                                                is_report_approval=True)})
+            form = RegularQuestionsForm(request.POST,
+                                        initial={'questions': CooperativeQuestion.objects.filter(
+                                            is_report_approval=True)})
         elif meeting.meeting_type == "irregular" and meeting.meeting_format == 'extramural':
             form = ExtramuralQuestionsForm(request.POST)
         elif meeting.meeting_type == "irregular" and meeting.meeting_format == 'intramural':
@@ -273,13 +435,14 @@ def meeting_questions(request, meeting_id):
                     meeting.save()
                     if meeting.meeting_type == 'regular':
                         meeting.questions.add(CooperativeQuestion.objects.get(
-                                                    is_report_approval=True).id)
-                        meeting.save()                        
+                            is_report_approval=True).id)
+                        meeting.save()
                     if meeting.meeting_type == 'irregular':
                         meeting.meeting_stage = 'requirement-initiator'
                     elif meeting.questions.filter(question='Принятие решения о реорганизации кооператива').exists():
                         meeting.meeting_stage = 'question-reorganization'
-                    elif meeting.questions.filter(question='Прекращение полномочий отдельных членов правления').exists():
+                    elif meeting.questions.filter(
+                            question='Прекращение полномочий отдельных членов правления').exists():
                         meeting.meeting_stage = 'question-termination'
                     elif meeting.questions.filter(
                             question='Принятие решения о приеме граждан в члены кооператива').exists():
@@ -395,13 +558,13 @@ def meeting_requirement_creation(request, meeting_id):
         if 'create_requirement' in request.POST:
             requirement = None
             # TODO requirement = create_requirement(meeting)
-           
+
             if cooperative_meeting.initiator == 'members':
                 members = []
                 representatives = []
                 for member in cooperative_members:
-                    representative = CooperativeMemberInitiator.objects.get(cooperative_member=member, 
-                                                                        cooperative_meeting=cooperative_meeting).representative
+                    representative = CooperativeMemberInitiator.objects.get(cooperative_member=member,
+                                                                            cooperative_meeting=cooperative_meeting).representative
                     if representative != '':
                         representatives.append(representative)
                     else:
@@ -409,7 +572,7 @@ def meeting_requirement_creation(request, meeting_id):
             else:
                 members = []
                 representatives = []
-                
+
             requirement = create_requirement(cooperative_meeting, members, representatives)
 
             filename = "Требование.docx"
@@ -509,10 +672,13 @@ def meeting_cooperative_reorganization(request, meeting_id):
 
         if form.is_valid() and accepted_members_formset.is_valid():
             accepted_members = []
+            counter = 0
 
             for accepted_member_form in accepted_members_formset:
+                counter += 1
                 fio = accepted_member_form.cleaned_data.get('fio')
                 accepted_members.append(CooperativeReorganizationAcceptedMember(cooperative_meeting=cooperative_meeting,
+                                                                                sequential_id=counter,
                                                                                 fio=fio))
 
             try:
@@ -559,11 +725,14 @@ def meeting_power_termination(request, meeting_id):
 
         if members_formset.is_valid():
             terminated_members = []
+            counter = 0
 
             for member_form in members_formset:
+                counter += 1
                 fio = member_form.cleaned_data.get('fio')
                 terminated_members.append(
-                    CooperativeTerminatedMember(cooperative_meeting=cooperative_meeting, fio=fio))
+                    CooperativeTerminatedMember(cooperative_meeting=cooperative_meeting, sequential_id=counter,
+                                                fio=fio))
 
             try:
                 with transaction.atomic():
@@ -600,11 +769,13 @@ def meeting_members_reception(request, meeting_id):
 
         if members_formset.is_valid():
             accepted_members = []
+            counter = 0
 
             for member_form in members_formset:
+                counter += 1
                 fio = member_form.cleaned_data.get('fio')
                 accepted_members.append(
-                    CooperativeAcceptedMember(cooperative_meeting=cooperative_meeting, fio=fio))
+                    CooperativeAcceptedMember(cooperative_meeting=cooperative_meeting, sequential_id=counter, fio=fio))
 
             try:
                 with transaction.atomic():
@@ -723,15 +894,15 @@ def meeting_preparation(request, meeting_id):
 
             elif 'save_and_continue' in request.POST:
                 # files = request.FILES.getlist('appendix')
-                send_notification(meeting, files)
-
-                return redirect('/meeting_execution')
+                # send_notification(meeting, files)
+                return redirect('/meeting_execution/' + str(meeting_id))
 
         else:
             return redirect('/intramural_preparation')
 
     return render(request=request, template_name="meeting_data/meeting_preparation.html",
                   context={"form": form, "title": title})
+
 
 @login_required
 def meeting_execution(request, meeting_id):
@@ -778,3 +949,379 @@ def meeting_execution(request, meeting_id):
     return render(request=request, template_name="meeting_data/meeting_execution.html",
                   context={'form' : form})
 
+
+@login_required
+def execution_before_info(request, meeting_id, question_id, sub_question_id):
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+
+    sub_question_object = CooperativeMeetingSubQuestion.objects.get(cooperative_meeting=cooperative_meeting,
+                                                                    question_id=question_id,
+                                                                    sub_question_id=sub_question_id)
+    members_form_set = formset_factory(BoardMembersCandidate, formset=BaseMemberVoteFormSet)
+
+    if request.method == "POST" and question_id == 6 and sub_question_id == 1:
+        form = ExecutionCooperativeReorganizationForm(request.POST)
+
+        if form.is_valid():
+
+            try:
+                with transaction.atomic():
+                    CooperativeMeetingTSZH.objects.create(cooperative_meeting=cooperative_meeting,
+                                                          name=form.cleaned_data.get('tszh_name'),
+                                                          place=form.cleaned_data.get('tszh_place'))
+                    return redirect('/execution_common_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(
+                        sub_question_id))
+
+            except IntegrityError:
+                return redirect(
+                    '/execution_before_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+        else:
+            return redirect(
+                '/execution_before_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+
+    elif request.method == "POST" and question_id == 6 and sub_question_id == 5:
+        form = BoardMembersForm(request.POST)
+        member_formset = members_form_set(request.POST)
+
+        if form.is_valid() and member_formset.is_valid():
+
+            try:
+                member_list = []
+                for member_form in member_formset:
+                    if member_form.cleaned_data.get('fio') is not None:
+                        member_list.append(CooperativeMeetingMemberCandidate(sub_question=sub_question_object,
+                                                                             fio=member_form.cleaned_data.get('fio')))
+                with transaction.atomic():
+                    CooperativeMeetingMemberCandidate.objects.bulk_create(member_list)
+                    sub_question_object.member_limit = int(form.cleaned_data.get('chosen_candidates_limit') or 0)
+                    sub_question_object.save()
+                    return redirect('/execution_common_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(
+                        sub_question_id))
+
+            except IntegrityError:
+                return redirect(
+                    '/execution_before_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+        else:
+            return redirect(
+                '/execution_before_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+
+    if question_id == 6 and sub_question_id == 1:
+        form = ExecutionCooperativeReorganizationForm()
+        context = {
+            'title': sub_question_object.title,
+            'sub_question': sub_question_object.sub_question,
+            'form': form,
+        }
+        return render(request=request, template_name="meeting_data/execution/reorganization_tszh.html",
+                      context=context)
+
+    elif question_id == 6 and sub_question_id == 5:
+        form = BoardMembersForm()
+        member_formset = members_form_set()
+        context = {
+            'title': sub_question_object.title,
+            'sub_question': sub_question_object.sub_question,
+            'form': form,
+            'member_formset': member_formset,
+        }
+        return render(request=request,
+                      template_name="meeting_data/execution/reorganization_chairman_candidates.html",
+                      context=context)
+
+
+@login_required
+def execution_common_info(request, meeting_id, question_id, sub_question_id):
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    questions_form_set = formset_factory(ExecutionAskedQuestion, formset=BaseFormSet)
+
+    sub_question_object = CooperativeMeetingSubQuestion.objects.get(cooperative_meeting=cooperative_meeting,
+                                                                    question_id=question_id,
+                                                                    sub_question_id=sub_question_id)
+
+    if request.method == "POST":
+        form = ExecutionQuestionInfoForm(request.POST)
+        questions_formset = questions_form_set(request.POST)
+
+        if form.is_valid() and questions_formset.is_valid():
+            questions_list = []
+
+            for question_form in questions_formset:
+                question = question_form.cleaned_data.get('question')
+                questions_list.append(
+                    CooperativeMeetingAskedQuestion(sub_question=sub_question_object, question=question))
+
+            try:
+                with transaction.atomic():
+                    sub_question_object.speaker = form.cleaned_data.get('speaker')
+                    sub_question_object.theses = form.cleaned_data.get('theses')
+                    CooperativeMeetingAskedQuestion.objects.bulk_create(questions_list)
+                    sub_question_object.save()
+                    return redirect(
+                        '/execution_voting/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+
+            except IntegrityError:
+                return redirect(
+                    '/execution_common_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+        else:
+            return redirect(
+                '/execution_common_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+    else:
+        questions_formset = questions_form_set()
+        form = ExecutionQuestionInfoForm()
+    context = {
+        'title': sub_question_object.title,
+        'sub_question': sub_question_object.sub_question,
+        'form': form,
+        'questions_formset': questions_formset,
+    }
+    return render(request=request, template_name="meeting_data/execution/common_info.html", context=context)
+
+
+def custom_key(member):
+    return member['votes_for']
+
+
+@login_required
+def execution_voting(request, meeting_id, question_id, sub_question_id):
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+
+    sub_question_object = CooperativeMeetingSubQuestion.objects.get(cooperative_meeting=cooperative_meeting,
+                                                                    question_id=question_id,
+                                                                    sub_question_id=sub_question_id)
+
+    members_form_set = formset_factory(MemberVotes, formset=BaseFormSet, extra=0)
+    if question_id == 6 and sub_question_id == 6:
+        prev_sub_question = CooperativeMeetingSubQuestion.objects.get(cooperative_meeting=cooperative_meeting,
+                                                                      question_id=question_id,
+                                                                      sub_question_id=sub_question_id - 1)
+        is_member_vote = CooperativeMeetingMemberCandidate.objects.filter(sub_question=prev_sub_question).exists()
+        is_second_stage_member_vote = CooperativeMeetingMemberCandidate.objects.filter(sub_question=prev_sub_question,
+                                                                                       votes_for__isnull=False).exists()
+
+    else:
+        is_member_vote = CooperativeMeetingMemberCandidate.objects.filter(sub_question=sub_question_object).exists()
+        is_second_stage_member_vote = CooperativeMeetingMemberCandidate.objects.filter(sub_question=sub_question_object,
+                                                                                       votes_for__isnull=False).exists()
+    if request.method == "POST" and not is_member_vote:
+        form = ExecutionVoting(request.POST)
+
+        if form.is_valid():
+
+            try:
+                with transaction.atomic():
+                    sub_question_object.votes_for = int(form.cleaned_data.get('votes_for') or 0)
+                    sub_question_object.votes_against = int(form.cleaned_data.get('votes_against') or 0)
+                    sub_question_object.votes_abstained = int(form.cleaned_data.get('votes_abstained') or 0)
+                    sub_question_object.decision = form.cleaned_data.get('decision')
+                    sub_question_object.save()
+                    if question_id == 11:
+                        return redirect(
+                            '/execution_after_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(
+                                sub_question_id))
+                    else:
+                        return execution_sub_question_redirect(meeting_id, question_id, sub_question_id + 1)
+
+            except IntegrityError:
+                return redirect(
+                    '/execution_voting/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+        else:
+            return redirect(
+                '/execution_voting/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+    elif request.method == "POST" and is_member_vote:
+        form = ExecutionFIOVoting(request.POST)
+        member_formset = members_form_set(request.POST)
+
+        if form.is_valid() and member_formset.is_valid():
+            member_list = []
+            candidate_list = []
+            member_limit = sub_question_object.member_limit
+            decision = None
+            for member_form in member_formset:
+                member_votes = int(member_form.cleaned_data.get('votes_for') or 0)
+                if member_votes == 0:
+                    continue
+                else:
+                    member_list.append({'fio': member_form.cleaned_data.get('fio'),
+                                        'votes_for': member_votes})
+            if is_second_stage_member_vote:
+                if len(member_list) > 1:
+                    member_list.sort(key=custom_key, reverse=True)
+                    if member_list[0]['votes_for'] == member_list[1]['votes_for']:
+                        decision = False
+                        for member in member_list:
+                            candidate = CooperativeMeetingMemberCandidate.objects.get(sub_question=prev_sub_question,
+                                                                                      fio=member['fio'])
+                            candidate.votes_for_second_stage = member['votes_for']
+                            candidate.accepted_second_stage = False
+                            candidate_list.append(candidate)
+                    else:
+                        candidate = CooperativeMeetingMemberCandidate.objects.get(sub_question=prev_sub_question,
+                                                                                  fio=member_list[0]['fio'])
+                        candidate.votes_for_second_stage = member_list[0]['votes_for']
+                        candidate.accepted_second_stage = True
+                        candidate_list.append(candidate)
+                elif len(member_list) == 1:
+                    candidate = CooperativeMeetingMemberCandidate.objects.get(sub_question=prev_sub_question,
+                                                                              fio=member_list[0]['fio'])
+                    candidate.votes_for_second_stage = member_list[0]['votes_for']
+                    candidate.accepted_second_stage = True
+                    candidate_list.append(candidate)
+
+                else:
+                    decision = False
+
+            else:
+                if len(member_list) > member_limit:
+                    member_list.sort(key=custom_key, reverse=True)
+                    if member_list[member_limit - 1]['votes_for'] == member_list[member_limit]['votes_for']:
+                        decision = False
+                        for member in member_list:
+                            candidate = CooperativeMeetingMemberCandidate.objects.get(sub_question=sub_question_object,
+                                                                                      fio=member['fio'])
+                            candidate.votes_for = member['votes_for']
+                            candidate.accepted = False
+                            candidate_list.append(candidate)
+
+                    else:
+                        for i in range(member_limit):
+                            candidate = CooperativeMeetingMemberCandidate.objects.get(sub_question=sub_question_object,
+                                                                                      fio=member_list[i]['fio'])
+                            candidate.votes_for = member_list[i]['votes_for']
+                            candidate.accepted = True
+                            candidate_list.append(candidate)
+
+                elif len(member_list) == member_limit:
+                    candidate = CooperativeMeetingMemberCandidate.objects.get(sub_question=sub_question_object,
+                                                                              fio=member_list[0]['fio'])
+                    candidate.votes_for = member_list[0]['votes_for']
+                    candidate.accepted = True
+                    candidate_list.append(candidate)
+
+                else:
+                    decision = False
+
+            try:
+                with transaction.atomic():
+                    for candidate in candidate_list:
+                        candidate.save()
+                    sub_question_object.votes_abstained = int(form.cleaned_data.get('votes_abstained') or 0)
+                    if decision is not None:
+                        sub_question_object.decision = decision
+                    else:
+                        sub_question_object.decision = form.cleaned_data.get('decision')
+                    sub_question_object.save()
+                    return execution_sub_question_redirect(meeting_id, question_id, sub_question_id + 1)
+
+            except IntegrityError:
+                return redirect(
+                    '/execution_voting/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+        else:
+            return redirect(
+                '/execution_voting/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+
+    if is_member_vote:
+        form = ExecutionFIOVoting()
+        candidate_data = []
+        if is_second_stage_member_vote:
+            candidates = CooperativeMeetingMemberCandidate.objects.filter(sub_question=prev_sub_question,
+                                                                          accepted=True)
+            for candidate in candidates:
+                candidate_data.append({'fio': candidate.fio})
+        else:
+            candidates = CooperativeMeetingMemberCandidate.objects.filter(sub_question=sub_question_object)
+            for candidate in candidates:
+                candidate_data.append({'fio': candidate.fio})
+
+        member_formset = members_form_set(initial=candidate_data)
+
+        context = {
+            'title': sub_question_object.title,
+            'sub_question': sub_question_object.sub_question,
+            'form': form,
+            'member_formset': member_formset,
+        }
+        return render(request=request, template_name="meeting_data/execution/vote_people.html", context=context)
+
+    else:
+        form = ExecutionVoting()
+        context = {
+            'title': sub_question_object.title,
+            'sub_question': sub_question_object.sub_question,
+            'form': form,
+        }
+        return render(request=request, template_name="meeting_data/execution/vote_subquestion.html", context=context)
+
+
+@login_required
+def execution_after_info(request, meeting_id, question_id, sub_question_id):
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+
+    sub_question_object = CooperativeMeetingSubQuestion.objects.get(cooperative_meeting=cooperative_meeting,
+                                                                    question_id=question_id,
+                                                                    sub_question_id=sub_question_id)
+
+    if request.method == "POST" and question_id == 11:
+        form = ExecutionTerminationDateForm(request.POST)
+
+        if form.is_valid():
+
+            try:
+                with transaction.atomic():
+                    terminated_member = CooperativeTerminatedMember.objects.get(cooperative_meeting=cooperative_meeting,
+                                                                                sequential_id=sub_question_id)
+                    terminated_member.date = form.cleaned_data.get('date')
+                    terminated_member.save()
+                    return execution_sub_question_redirect(meeting_id, question_id, sub_question_id + 1)
+
+            except IntegrityError:
+                return redirect(
+                    '/execution_after_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+        else:
+            return redirect(
+                '/execution_after_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+
+    if question_id == 11:
+        form = ExecutionTerminationDateForm()
+        context = {
+            'title': sub_question_object.title,
+            'sub_question': sub_question_object.sub_question,
+            'form': form,
+        }
+        return render(request=request, template_name="meeting_data/execution/termination_date.html",
+                      context=context)
+
+
+@login_required
+def meeting_finish(request, meeting_id):
+    if request.method == "POST":
+        # TODO protocol = create_protocol(meeting_id)
+        filename = "Протокол.docx"
+
+        if 'create_protocol' in request.POST:
+            ...
+            # response = HttpResponse(protocol,
+            #                         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            # disposition = 'attachment'
+            # try:
+            #     filename.encode('ascii')
+            #     file_expr = 'filename="{}"'.format(filename)
+            # except UnicodeEncodeError:
+            #     file_expr = "filename*=utf-8''{}".format(quote(filename))
+            # response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
+            # return response
+        elif 'send_protocol' in request.POST:
+            ...
+            # send_protocol(meeting_id, protocol)
+        else:
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    meeting.meeting_stage = 'finished'
+                    meeting.save()
+
+            except IntegrityError:
+                return redirect(
+                    '/meeting_finish/' + str(meeting_id))
+            return redirect('dashboard')
+
+    return render(request=request, template_name="meeting_data/meeting_finish.html")

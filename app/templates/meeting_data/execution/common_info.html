@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <section class="py-4 py-xl-5" style="height: 377.725px;">
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-8 col-lg-6 col-xl-5 col-xxl-5">
+                    <div class="card mb-5">
+                        <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
+                            <h2 class="mb-4" id="form_heading" style="margin-top: -40px;">{{ title }}</h2>
+                            <p>{{ sub_question }}</p>
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    {{ form.speaker|as_crispy_field }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.theses|as_crispy_field }}
+                                </div>
+
+                                {{ questions_formset.management_form }}
+
+                                {% for question_form in questions_formset %}
+
+                                    <div class="question-formset d-flex flex-row justify-content-center align-items-center align-content-center">
+                                        {{ question_form.question|as_crispy_field }}
+                                        {% if question_form.question.errors %}
+                                            {% for error in question_form.question.errors %}
+                                                {{ error|escape }}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+
+                                {% if questions_formset.non_form_errors %}
+                                    {% for error in questions_formset.non_form_errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+
+                                <button class="btn btn-primary d-block w-100" id="submit" type="submit">
+                                    Далее
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="{% static 'jquery.formset.js' %}"></script>
+    <script>
+        $('.question-formset').formset({
+            addText: 'Добавить еще вопрос',
+            deleteText: 'Удалить'
+        });
+    </script>
+{% endblock content %}

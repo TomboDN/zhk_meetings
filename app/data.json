@@ -185,7 +185,7 @@
     "fields": {
       "question": "Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива",
       "is_report_approval": true,
-      "is_clickable": false,
+      "is_clickable": true,
       "is_available_for_regular_meeting": true,
       "is_available_for_intramural_meeting": false,
       "is_available_for_extramural_meeting": false

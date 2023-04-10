@@ -26,6 +26,7 @@ MEETING_STAGES = [
     ('preparation', 'Стадия подготовки'),
     ('conducting', 'Стадия проведения'),
     ('decision-making', 'Стадия принятия решения'),
+    ('finished', 'Завершено'),
 ]
 
 INITIATORS = [
@@ -84,6 +85,7 @@ class CooperativeMeeting(models.Model):
     meeting_chairman = models.CharField(max_length=255)
     vote_counter = models.CharField(max_length=255)
     secretary = models.CharField(max_length=255)
+    end_date = models.DateField(null=True)
 
 
 class CooperativeMemberInitiator(models.Model):
@@ -94,6 +96,7 @@ class CooperativeMemberInitiator(models.Model):
 
 class CooperativeReorganizationAcceptedMember(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    sequential_id = models.IntegerField(null=True)
     fio = models.CharField(max_length=255)
 
 
@@ -105,9 +108,47 @@ class CooperativeMeetingReorganization(models.Model):
 
 class CooperativeTerminatedMember(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    sequential_id = models.IntegerField(null=True)
     fio = models.CharField(max_length=255)
+    date = models.DateField(null=True)
 
 
 class CooperativeAcceptedMember(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    sequential_id = models.IntegerField(null=True)
     fio = models.CharField(max_length=255)
+
+
+class CooperativeMeetingSubQuestion(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    question_id = models.IntegerField(null=True)
+    sub_question_id = models.IntegerField(null=True)
+    title = models.CharField(max_length=255)
+    sub_question = models.CharField(max_length=255)
+    speaker = models.CharField(max_length=255)
+    theses = models.CharField(max_length=255)
+    votes_for = models.IntegerField(null=True)
+    votes_against = models.IntegerField(null=True)
+    votes_abstained = models.IntegerField(null=True)
+    decision = models.BooleanField(null=True)
+    member_limit = models.IntegerField(null=True)
+
+
+class CooperativeMeetingAskedQuestion(models.Model):
+    sub_question = models.ForeignKey(CooperativeMeetingSubQuestion, on_delete=models.CASCADE)
+    question = models.CharField(max_length=255)
+
+
+class CooperativeMeetingMemberCandidate(models.Model):
+    sub_question = models.ForeignKey(CooperativeMeetingSubQuestion, on_delete=models.CASCADE)
+    fio = models.CharField(max_length=255)
+    votes_for = models.IntegerField(null=True)
+    accepted = models.BooleanField(null=True)
+    votes_for_second_stage = models.IntegerField(null=True)
+    accepted_second_stage = models.BooleanField(null=True)
+
+
+class CooperativeMeetingTSZH(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    place = models.CharField(max_length=255)
