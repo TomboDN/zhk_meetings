@@ -7,21 +7,20 @@
                 <div class="col-md-8 col-lg-6 col-xl-5 col-xxl-5">
                     <div class="card mb-5">
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
-                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">{{ title }}</h2>
+                            <h2 class="mb-4" id="form_heading" style="margin-top: -40px;">{{ title }}</h2>
                             <p>{{ sub_question }}</p>
                             <p>Голосовали:</p>
                             <form method="post">
                                 {% csrf_token %}
-                                {{ members_formset.management_form }}
+                                {{ member_formset.management_form }}
 
-                                {% for member_form in members_formset %}
+                                {% for member_form in member_formset %}
 
                                     <div class="mb-3">
-                                        <span>За </span>
-                                        {{ member_form.fio }}
-                                        <span> - </span>
+                                        <span>Голосов за </span>
+                                        {{ member_form.fio.as_hidden }}
+                                        {{ member_form.fio.value }}
                                         {{ member_form.votes_for|as_crispy_field }}
-                                        <span> голосов</span>
                                         {% if member_form.votes_for.errors %}
                                             {% for error in member_form.votes_for.errors %}
                                                 {{ error|escape }}
@@ -30,15 +29,14 @@
                                     </div>
                                 {% endfor %}
 
-                                {% if members_formset.non_form_errors %}
-                                    {% for error in members_formset.non_form_errors %}
+                                {% if member_formset.non_form_errors %}
+                                    {% for error in member_formset.non_form_errors %}
                                         {{ error|escape }}
                                     {% endfor %}
                                 {% endif %}
                                 <div class="mb-3">
-                                    <span>Воздержались - </span>
+                                    <span>Воздержались </span>
                                     {{ form.votes_abstained|as_crispy_field }}
-                                    <span> голосов</span>
                                 </div>
                                 <div class="mb-3">
                                     {{ form.decision|as_crispy_field }}

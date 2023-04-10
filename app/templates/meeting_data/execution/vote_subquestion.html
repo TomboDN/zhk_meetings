@@ -7,25 +7,22 @@
                 <div class="col-md-8 col-lg-6 col-xl-5 col-xxl-5">
                     <div class="card mb-5">
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
-                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">{{ title }}</h2>
+                            <h2 class="mb-4" id="form_heading" style="margin-top: -40px;">{{ title }}</h2>
                             <p>{{ sub_question }}</p>
                             <p>Голосовали:</p>
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="mb-3">
-                                    <span>За - </span>
+                                    <span>Голосов за</span>
                                     {{ form.votes_for|as_crispy_field }}
-                                    <span> голосов</span>
                                 </div>
                                 <div class="mb-3">
-                                    <span>Против - </span>
+                                    <span>Голосов против</span>
                                     {{ form.votes_against|as_crispy_field }}
-                                    <span> голосов</span>
                                 </div>
                                 <div class="mb-3">
-                                    <span>Воздержались - </span>
+                                    <span>Воздержались</span>
                                     {{ form.votes_abstained|as_crispy_field }}
-                                    <span> голосов</span>
                                 </div>
                                 <div class="mb-3">
                                     {{ form.decision|as_crispy_field }}

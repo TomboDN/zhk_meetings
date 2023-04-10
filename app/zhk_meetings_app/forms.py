@@ -343,10 +343,10 @@ class ExecutionAskedQuestion(forms.Form):
 
 
 class ExecutionVoting(forms.Form):
-    votes_for = forms.IntegerField(required=False, min_value=1)
-    votes_against = forms.IntegerField(required=False, min_value=1)
-    votes_abstained = forms.IntegerField(required=False, min_value=1)
-    decision = forms.ChoiceField(choices=DECISION_CHOICE, widget=forms.Select)
+    votes_for = forms.IntegerField(required=True, min_value=0, label=False, initial=0)
+    votes_against = forms.IntegerField(required=True, min_value=0, label=False, initial=0)
+    votes_abstained = forms.IntegerField(required=True, min_value=0, label=False, initial=0)
+    decision = forms.ChoiceField(choices=DECISION_CHOICE, widget=forms.Select, label='Решение')
 
 
 class BoardMembersCandidate(forms.Form):
@@ -355,17 +355,17 @@ class BoardMembersCandidate(forms.Form):
 
 class BoardMembersForm(forms.Form):
     chosen_candidates_limit = forms.IntegerField(label='Укажите количество кандидатов, которые должны быть выбраны',
-                                                 min_value=1)
+                                                 min_value=0, initial=0)
 
 
 class ExecutionFIOVoting(forms.Form):
-    votes_abstained = forms.IntegerField(required=False, min_value=1)
-    decision = forms.ChoiceField(choices=DECISION_CHOICE, widget=forms.Select)
+    votes_abstained = forms.IntegerField(required=False, min_value=0, label=False, initial=0)
+    decision = forms.ChoiceField(choices=DECISION_CHOICE, widget=forms.Select, label='Решение')
 
 
 class MemberVotes(forms.Form):
-    fio = forms.CharField(disabled=True, required=False)
-    votes_for = forms.IntegerField(required=False, min_value=1)
+    fio = forms.CharField(required=True)
+    votes_for = forms.IntegerField(required=True, min_value=0, label=False, initial=0)
 
 
 class BaseMemberVoteFormSet(BaseFormSet):
@@ -392,11 +392,11 @@ class BaseMemberVoteFormSet(BaseFormSet):
                     )
 
 
-class ExecutionTerminationDateForm(forms.ModelForm):
+class ExecutionTerminationDateForm(forms.Form):
     date = forms.DateField(label='Дата прекращения полномочий члена Правления:',
                            widget=forms.NumberInput(attrs={'type': 'date'}))
 
 
-class MeetingFinishDateForm(forms.ModelForm):
-    date = forms.DateField(label='Дата прекращения полномочий члена Правления:',
+class MeetingFinishDateForm(forms.Form):
+    date = forms.DateField(label='Дата окончания собрания:',
                            widget=forms.NumberInput(attrs={'type': 'date'}))
