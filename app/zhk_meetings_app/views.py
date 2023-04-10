@@ -8,7 +8,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
 from urllib.parse import quote
 
-from doc import docs_filling, create_requirement, create_decision
+from doc import create_notification, create_requirement, create_decision
 from emails import send_notification
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
@@ -630,7 +630,30 @@ def meeting_members_reception(request, meeting_id):
 @login_required
 def meeting_preparation(request, meeting_id):
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
-    cooperative_members = CooperativeMember.objects.filter(cooperative=meeting.cooperative).order_by('email_address')
+    cooperative_members = CooperativeMember.objects.filter(cooperative=meeting.cooperative)
+   
+    if CooperativeReorganizationAcceptedMember.objects.filter(cooperative_meeting=meeting).exists():
+        reorganization_accepted_members = CooperativeReorganizationAcceptedMember.objects.filter(cooperative_meeting=meeting)
+    else:
+        reorganization_accepted_members = []
+    
+    if CooperativeTerminatedMember.objects.filter(cooperative_meeting=meeting).exists():
+        terminated_members = CooperativeTerminatedMember.objects.filter(cooperative_meeting=meeting)
+    else:
+        terminated_members = []
+        
+    if CooperativeAcceptedMember.objects.filter(cooperative_meeting=meeting).exists():
+        accepted_members = CooperativeAcceptedMember.objects.filter(cooperative_meeting=meeting)
+    else:
+        accepted_members = []
+
+    if CooperativeMeetingReorganization.objects.filter(cooperative_meeting=meeting).exists():
+        responsible_name = CooperativeMeetingReorganization.objects.get(cooperative_meeting=meeting).responsible_name
+        convert_name = CooperativeMeetingReorganization.objects.get(cooperative_meeting=meeting).convert_name
+    else:
+        responsible_name = ''
+        convert_name = ''
+
     if meeting.meeting_type == "regular":
         title = "Стадия подготовки очередного собрания"
         form = IntramuralPreparationForm()
@@ -681,9 +704,10 @@ def meeting_preparation(request, meeting_id):
                 # TODO notification = create_notification(meeting)
                 notification_number = 1
                 for member in cooperative_members:
-                    notification = docs_filling(notification_number,
-                                                member.pk, member.fio, meeting,
-                                                files)
+                    notification = create_notification(notification_number, member.pk, 
+                                                member.fio, meeting, responsible_name,
+                                                convert_name, reorganization_accepted_members, 
+                                                terminated_members, accepted_members, files)
                     notification_number += 1
                 filename = "Уведомление.docx"
                 response = HttpResponse(notification,
