@@ -8,7 +8,6 @@ from phonenumber_field.widgets import RegionalPhoneNumberWidget
 
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion
 
-
 DECISION_CHOICE = [
     ('True', 'Решение принято'),
     ('False', 'Решение не принято'),
@@ -391,3 +390,13 @@ class BaseMemberVoteFormSet(BaseFormSet):
                         'Фио участников повторяются',
                         code='duplicate_fio'
                     )
+
+
+class ExecutionTerminationDateForm(forms.ModelForm):
+    date = forms.DateField(label='Дата прекращения полномочий члена Правления:',
+                           widget=forms.NumberInput(attrs={'type': 'date'}))
+
+
+class MeetingFinishDateForm(forms.ModelForm):
+    date = forms.DateField(label='Дата прекращения полномочий члена Правления:',
+                           widget=forms.NumberInput(attrs={'type': 'date'}))

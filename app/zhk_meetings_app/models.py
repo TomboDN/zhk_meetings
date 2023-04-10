@@ -26,6 +26,7 @@ MEETING_STAGES = [
     ('preparation', 'Стадия подготовки'),
     ('conducting', 'Стадия проведения'),
     ('decision-making', 'Стадия принятия решения'),
+    ('finished', 'Завершено'),
 ]
 
 INITIATORS = [
@@ -89,6 +90,7 @@ class CooperativeMeeting(models.Model):
     meeting_chairman = models.CharField(max_length=255, choices=MEETING_CHAIRMANS)
     vote_counter = models.CharField(max_length=255)
     secretary = models.CharField(max_length=255)
+    end_date = models.DateField(null=True)
 
 
 class CooperativeMemberInitiator(models.Model):
@@ -111,11 +113,14 @@ class CooperativeMeetingReorganization(models.Model):
 
 class CooperativeTerminatedMember(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    sequential_id = models.IntegerField(null=True)
     fio = models.CharField(max_length=255)
+    date = models.DateField(null=True)
 
 
 class CooperativeAcceptedMember(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    sequential_id = models.IntegerField(null=True)
     fio = models.CharField(max_length=255)
 
 
@@ -143,7 +148,9 @@ class CooperativeMeetingMemberCandidate(models.Model):
     sub_question = models.ForeignKey(CooperativeMeetingSubQuestion, on_delete=models.CASCADE)
     fio = models.CharField(max_length=255)
     votes_for = models.IntegerField(null=True)
+    accepted = models.BooleanField(null=True)
     votes_for_second_stage = models.IntegerField(null=True)
+    accepted_second_stage = models.BooleanField(null=True)
 
 
 class CooperativeMeetingTSZH(models.Model):
