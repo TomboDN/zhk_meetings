@@ -4,10 +4,10 @@ import io
 from docxtpl import DocxTemplate
 
 
-def strings_creating(elements):
-    elements_string = '\n\t'
+def strings_creating(shift, elements):
+    elements_string = '\t'
     for index, element in enumerate(elements):
-        elements_string = elements_string + str(index + 1) + '. ' + element + '\n\t'
+        elements_string = elements_string + str(index + shift + 1) + '. ' + element + '\n\t'
     return elements_string
 
 
@@ -32,7 +32,10 @@ def create_decision(decision_number, meeting):
     for question in questions_list.all():
         questions.append(question.question)
 
-    questions_string = strings_creating(questions)
+    questions_string = '\n\t\t'
+    for index, question in enumerate(questions):
+        questions_string = questions_string + str(index + 1) + '. ' + question + '\n\t\t'
+    
 
     context = {'number': number,
                'cooperative_name': meeting.cooperative.cooperative_name,
@@ -100,8 +103,8 @@ def create_requirement(meeting, members, representatives):
     questions = []
     for question in questions_list.all():
         questions.append(question.question)
-
-    questions_string = strings_creating(questions)
+    
+    questions_string = strings_creating(0, questions)
 
     context = {'name': name,
                'cooperative_name': meeting.cooperative.cooperative_name,
@@ -125,26 +128,54 @@ def create_requirement(meeting, members, representatives):
     return file_stream
 
 
-def docs_filling(notification_number, pk, fio, meeting, files):
+def create_notification(notification_number, pk, fio, meeting, responsible_name, convert_name, 
+                 reorganization_accepted_members, terminated_members, accepted_members, files):
+    
     hours = str(meeting.time).split(':')[0]
     minutes = str(meeting.time).split(':')[1]
 
-    filenames = []
-    for file in files:
-        filenames.append(file.name)
+    if files:    
+        filenames = []
+        for file in files:
+            filenames.append(file.name)
 
-    filenames_string = strings_creating(filenames)
+        filenames_string = 'Приложения:\n' + strings_creating(0, filenames)
+    else:
+        filenames_string = ''
 
     today_date = datetime.date.today().strftime("%d.%m.%Y")
 
-    number = str(notification_number) + '-' + str(pk) + '/' + today_date.split('.')[2][2:]
+    number = 'У' + str(notification_number) + '-' + str(pk) + '/' + today_date.split('.')[2][2:]
 
     questions_list = meeting.questions
-    questions = []
+    chosen_questions = []
     for question in questions_list.all():
-        questions.append(question.question)
+        chosen_questions.append(question.question)
 
-    questions_string = strings_creating(questions)
+    questions = []
+    questions_shift = 0
+    
+    if 'Принятие решения о реорганизации кооператива' in chosen_questions:
+        questions_shift = 7
+        for member in reorganization_accepted_members:
+            questions.append('Принятие '+member.fio+
+                             ' в члены товарищества собственников жилья «'+convert_name+'»')     
+
+    else:
+        for question in chosen_questions:
+            if question == 'Прекращение полномочий отдельных членов правления':
+                for member in terminated_members:
+                    questions.append('Досрочное прекращение полномочий члена Правления жилищного кооператива '
+                                 +member.fio+'.')
+        
+            elif question == 'Принятие решения о приеме граждан в члены кооператива':
+                for member in accepted_members:
+                    questions.append('Принятие решения о приеме '
+                                 +member.fio+' в члены Жилищного кооператива')
+            else:
+                continue
+    
+    questions_string = strings_creating(questions_shift, questions)
 
     context = {'member_name': fio,
                'cooperative_name': meeting.cooperative.cooperative_name,
@@ -160,16 +191,32 @@ def docs_filling(notification_number, pk, fio, meeting, files):
                'chairman_name': meeting.cooperative.chairman_name,
                'today_date': today_date}
 
+
     if meeting.meeting_type == 'regular':
-        doc = DocxTemplate("/usr/src/app/doc/template_1.docx")
+        if 'Принятие решения о реорганизации кооператива' in chosen_questions:
+            doc = DocxTemplate("/usr/src/app/doc/Notification_regular_reorganization.docx")
+            context['responsible_name'] = responsible_name
+            context['convert_name'] = convert_name
+        else:
+            doc = DocxTemplate("/usr/src/app/doc/Notification_regular.docx")
         context['meeting_address'] = meeting.place
 
     elif meeting.meeting_type == 'irregular' and meeting.meeting_format == 'intramural':
-        doc = DocxTemplate("/usr/src/app/doc/template_2.docx")
+        if 'Принятие решения о реорганизации кооператива' in chosen_questions:
+            doc = DocxTemplate("/usr/src/app/doc/Notification_regular_reorganization.docx")
+            context['responsible_name'] = responsible_name
+            context['convert_name'] = convert_name
+        else:
+            doc = DocxTemplate("/usr/src/app/doc/Notification_regular.docx")
         context['meeting_address'] = meeting.place
 
     else:
-        doc = DocxTemplate("/usr/src/app/doc/template_3.docx")
+        if 'Принятие решения о реорганизации кооператива' in chosen_questions:
+            doc = DocxTemplate("/usr/src/app/doc/Notification_regular_reorganization.docx")
+            context['responsible_name'] = responsible_name
+            context['convert_name'] = convert_name
+        else:
+            doc = DocxTemplate("/usr/src/app/doc/Notification_regular.docx")
 
     doc.render(context)
     doc.save('/usr/src/app/notification' + str(notification_number) + '.docx')
