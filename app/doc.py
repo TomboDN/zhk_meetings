@@ -161,19 +161,19 @@ def create_notification(notification_number, pk, fio, meeting, responsible_name,
             questions.append('Принятие '+member.fio+
                              ' в члены товарищества собственников жилья «'+convert_name+'»')     
 
-    else:
-        for question in chosen_questions:
-            if question == 'Прекращение полномочий отдельных членов правления':
-                for member in terminated_members:
-                    questions.append('Досрочное прекращение полномочий члена Правления жилищного кооператива '
+    for question in chosen_questions:
+        if question == 'Прекращение полномочий отдельных членов правления':
+            for member in terminated_members:
+                questions.append('Досрочное прекращение полномочий члена Правления жилищного кооператива '
                                  +member.fio+'.')
         
-            elif question == 'Принятие решения о приеме граждан в члены кооператива':
-                for member in accepted_members:
-                    questions.append('Принятие решения о приеме '
+        elif question == 'Принятие решения о приеме граждан в члены кооператива':
+            for member in accepted_members:
+                questions.append('Принятие решения о приеме '
                                  +member.fio+' в члены Жилищного кооператива')
-            else:
-                continue
+               
+        else:
+            continue
     
     questions_string = strings_creating(questions_shift, questions)
 
