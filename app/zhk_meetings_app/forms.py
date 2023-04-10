@@ -302,6 +302,7 @@ class ExtramuralPreparationForm(forms.ModelForm):
         model = CooperativeMeeting
         fields = ['date', 'time']
 
+
 class ExecutionForm(forms.ModelForm):
     MEETING_CHAIRMANS = [
         ('chairman', 'Председатель правления'),
@@ -309,6 +310,7 @@ class ExecutionForm(forms.ModelForm):
     ]
     meeting_chairman_type = forms.ChoiceField(label='Укажите председательствующего на собрании', 
                                 choices=MEETING_CHAIRMANS, widget=forms.Select(attrs={'onchange': 'check()'}))
+    another_member = forms.CharField(label='Другое лицо', help_text='Введите ФИО', required=False)
     vote_counter = forms.CharField(label='Укажите ответственного за подсчёт голосов',
                                    help_text='Введите ФИО')
     secretary = forms.CharField(label='Укажите секретаря собрания', help_text='Введите ФИО')
@@ -317,5 +319,4 @@ class ExecutionForm(forms.ModelForm):
         model = CooperativeMeeting
         fields = ['vote_counter', 'secretary']
 
-class MeetingChairmanAnotherMember(forms.Form):
-    another_member = forms.CharField(label='Другое лицо', help_text='Введите ФИО')
+    

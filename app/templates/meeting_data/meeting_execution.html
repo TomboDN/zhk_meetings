@@ -14,34 +14,19 @@
                                 {% csrf_token %}
 
                                 {{ form.meeting_chairman_type|as_crispy_field }}
-                                {% if form.meeting_chairman.errors %}
-                                    {% for error in form.meeting_chairman.errors %}
+                                {% if form.meeting_chairman_type.errors %}
+                                    {% for error in form.meeting_chairman_type.errors %}
                                         {{ error|escape }}
                                     {% endfor %}
                                 {% endif %}
 
                                 <div id="another_member" style="display: none;">
-                                    {{ another_member.management_form }}
-                                
-                                {% for another_member_form in another_member %}
-
-                                    <div class="another-member-formset justify-content-left align-content-left">
-                                        {{ another_member_form.another_member|as_crispy_field }}
-                                        {% if another_member_form.another_member.errors %}
-                                            {% for error in another_member_form.another_member.errors %}
-                                                {{ error|escape }}
-                                            {% endfor %}
-                                        {% endif %}            
-                                    </div>
-
-                                {% endfor %}
-
-                                {% if another_member.non_form_errors %}
-                                    {% for error in another_member.non_form_errors %}
-                                        {{ error|escape }}
-                                    {% endfor %}
-                                {% endif %}
-                                
+                                    {{ form.another_member|as_crispy_field }}
+                                    {% if form.another_member.errors %}
+                                        {% for error in form.another_member.errors %}
+                                            {{ error|escape }}
+                                        {% endfor %}
+                                    {% endif %}      
                                 </div>
 
                                 {{ form.vote_counter|as_crispy_field }}
