@@ -86,11 +86,19 @@ class CooperativeMeeting(models.Model):
     vote_counter = models.CharField(max_length=255)
     secretary = models.CharField(max_length=255)
     end_date = models.DateField(null=True)
+    quorum = models.BooleanField(null=True)
 
 
 class CooperativeMemberInitiator(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
     cooperative_member = models.ForeignKey(CooperativeMember, on_delete=models.CASCADE)
+
+
+class CooperativeMeetingAttendant(models.Model):
+    cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
+    cooperative_member = models.ForeignKey(CooperativeMember, on_delete=models.CASCADE)
+    representative_attends = models.BooleanField(default=False)
+    representative_name = models.CharField(max_length=255)
 
 
 class CooperativeReorganizationAcceptedMember(models.Model):

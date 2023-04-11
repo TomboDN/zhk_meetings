@@ -15,13 +15,15 @@ from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, Coopera
     IntramuralQuestionsForm, IntramuralPreparationForm, CooperativeMeetingTypeForm, CooperativeMeetingFormatForm, \
     ExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
     MemberRepresentativeForm, MeetingCooperativeReorganizationForm, MemberTransferFioForm, ChairmanMemberFioForm, \
-    MemberAcceptFioForm, ExecutionForm, MeetingChairmanAnotherMember, ExecutionAskedQuestion, ExecutionQuestionInfoForm, \
-    ExecutionVoting, ExecutionFIOVoting, MemberVotes, ExecutionCooperativeReorganizationForm, BoardMembersCandidate, \
-    BaseMemberVoteFormSet, BoardMembersForm, ExecutionTerminationDateForm, MeetingFinishDateForm
+    MemberAcceptFioForm, ExecutionForm, IntramuralExecutionAttendantForm, \
+    ExtramuralExecutionAttendantForm, MeetingChairmanAnotherMember, \
+    ExecutionAskedQuestion, ExecutionQuestionInfoForm, ExecutionVoting, ExecutionFIOVoting, MemberVotes, \
+    ExecutionCooperativeReorganizationForm, BoardMembersCandidate, BaseMemberVoteFormSet, BoardMembersForm, \
+    ExecutionTerminationDateForm, MeetingFinishDateForm
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberInitiator, \
     CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
     CooperativeAcceptedMember, CooperativeQuestion, CooperativeMeetingAskedQuestion, CooperativeMeetingSubQuestion, \
-    CooperativeMeetingMemberCandidate, CooperativeMeetingTSZH
+    CooperativeMeetingMemberCandidate, CooperativeMeetingTSZH, CooperativeMeetingAttendant
 
 
 def register_request(request):
@@ -91,14 +93,16 @@ def execution_redirect(meeting_id):
     type = meeting.meeting_type
     format = meeting.meeting_format
     if type == 'regular' or (type == 'irregular' and format == 'intramural'):
-        return redirect('/meeting_intramural_execution/' + str(meeting_id))
+        return redirect('/meeting_execution_intramural/' + str(meeting_id))
     elif format == 'extramural':
-        return redirect('/meeting_extramural_execution/' + str(meeting_id))
+        return redirect('/meeting_execution_extramural/' + str(meeting_id))
 
 
 def sub_question_init(meeting_id):
     sub_questions_list = []
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    if not meeting.quorum:
+        return redirect('/meeting_finish/' + str(meeting_id))
     meeting_questions_object = meeting.questions.all()
     for question in meeting_questions_object:
         if question.id == 6:
@@ -911,9 +915,8 @@ def meeting_execution(request, meeting_id):
                 except IntegrityError:
                     return redirect('/meeting_execution/' + str(meeting_id))
             
-                #return execution_redirect(meeting_id)
-                return redirect('/meeting_execution/' + str(meeting_id))
-        
+                return execution_redirect(meeting_id)
+                        
             elif meeting_chairman_type == 'member':
                 try:
                     with transaction.atomic():
@@ -926,14 +929,123 @@ def meeting_execution(request, meeting_id):
                 except IntegrityError:
                     return redirect('/meeting_execution/' + str(meeting_id))
             
-                #return execution_redirect(meeting_id)
-                return redirect('/meeting_execution/' + str(meeting_id))
+                return execution_redirect(meeting_id)
 
         else:
             return redirect('/meeting_execution/' + str(meeting_id))
     
     return render(request=request, template_name="meeting_data/meeting_execution.html",
                   context={'form' : form})
+
+
+@login_required
+def meeting_execution_attendance_intramural(request, meeting_id):
+    cooperative = Cooperative.objects.get(cooperative_user=request.user)
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    attendant_form_set = formset_factory(IntramuralExecutionAttendantForm, formset=BaseFormSet, extra=0)
+    cooperative_members = CooperativeMember.objects.filter(cooperative=cooperative)
+    member_data = [{'cooperative_member_id': x.id, 'cooperative_member': x.fio}
+                   for x in cooperative_members]
+    if request.method == "POST":
+        attendant_formset = attendant_form_set(request.POST)
+
+        if attendant_formset.is_valid() :
+            attendants = []
+
+            for attendant_form in attendant_formset:
+                cooperative_member = CooperativeMember.objects.get(
+                    id=attendant_form.cleaned_data.get('cooperative_member_id'))
+                meeting_attendant_type = attendant_form.cleaned_data.get('meeting_attendant_type')
+                representative = attendant_form.cleaned_data.get('representative')
+
+                if cooperative_member and representative and meeting_attendant_type == 'representative':
+                    attendants.append(CooperativeMeetingAttendant(cooperative_meeting=cooperative_meeting,
+                                                                        cooperative_member=cooperative_member,
+                                                                        representative_attends=True,
+                                                                        representative_name=representative))
+                elif cooperative_member and meeting_attendant_type == "member":
+                    attendants.append(CooperativeMeetingAttendant(cooperative_meeting=cooperative_meeting,
+                                                                        cooperative_member=cooperative_member))
+                    
+            quorum = True
+            if len(attendants) <= 0.5 * CooperativeMember.objects.count():
+                quorum = False
+
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    meeting.quorum = quorum
+                    meeting.save()
+                    CooperativeMeetingAttendant.objects.bulk_create(attendants)
+                    return sub_question_init(meeting_id)
+
+            except IntegrityError:
+                return redirect('/meeting_execution_intramural/' + str(meeting_id))
+            
+        else:
+            return redirect('/meeting_execution_intramural/' + str(meeting_id))
+    else:
+        attendant_formset = attendant_form_set(initial=member_data)
+    context = {
+        'attendant_formset': attendant_formset,
+    }
+
+    return render(request=request, template_name="meeting_data/meeting_execution_intramural.html", context=context)
+
+
+@login_required
+def meeting_execution_attendance_extramural(request, meeting_id):
+    cooperative = Cooperative.objects.get(cooperative_user=request.user)
+    cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    attendant_form_set = formset_factory(ExtramuralExecutionAttendantForm, formset=BaseFormSet, extra=0)
+    cooperative_members = CooperativeMember.objects.filter(cooperative=cooperative)
+    member_data = [{'cooperative_member_id': x.id, 'cooperative_member': x.fio}
+                   for x in cooperative_members]
+    if request.method == "POST":
+        attendant_formset = attendant_form_set(request.POST)
+
+        if attendant_formset.is_valid() :
+            attendants = []
+
+            for attendant_form in attendant_formset:
+                cooperative_member = CooperativeMember.objects.get(
+                    id=attendant_form.cleaned_data.get('cooperative_member_id'))
+                meeting_attendant_type = attendant_form.cleaned_data.get('meeting_attendant_type')
+                representative = attendant_form.cleaned_data.get('representative')
+
+                if cooperative_member and representative and meeting_attendant_type == 'representative':
+                    attendants.append(CooperativeMeetingAttendant(cooperative_meeting=cooperative_meeting,
+                                                                        cooperative_member=cooperative_member,
+                                                                        representative_attends=True,
+                                                                        representative_name=representative))
+                elif cooperative_member and meeting_attendant_type == "member":
+                    attendants.append(CooperativeMeetingAttendant(cooperative_meeting=cooperative_meeting,
+                                                                        cooperative_member=cooperative_member))
+                    
+            quorum = True
+            if len(attendants) <= 0.5 * CooperativeMember.objects.count():
+                quorum = False
+
+            try:
+                with transaction.atomic():
+                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                    meeting.quorum = quorum
+                    meeting.save()
+                    CooperativeMeetingAttendant.objects.bulk_create(attendants)
+                    return sub_question_init(meeting_id)
+
+            except IntegrityError:
+                return redirect('/meeting_execution_extramural/' + str(meeting_id))
+            
+        else:
+            return redirect('/meeting_execution_extramural/' + str(meeting_id))
+    else:
+        attendant_formset = attendant_form_set(initial=member_data)
+    context = {
+        'attendant_formset': attendant_formset,
+    }
+
+    return render(request=request, template_name="meeting_data/meeting_execution_extramural.html", context=context)
 
 
 @login_required

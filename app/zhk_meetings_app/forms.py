@@ -324,6 +324,32 @@ class ExecutionForm(forms.ModelForm):
         fields = ['vote_counter', 'secretary']
 
 
+class IntramuralExecutionAttendantForm(forms.Form):
+    ATTENDANCE = [
+        ('absent', 'Отсутствовал'),
+        ('member', 'Присутствовал член кооператива'),
+        ('representative', 'Присутствовал представитель члена кооператива')
+    ]
+    cooperative_member_id = forms.IntegerField()
+    cooperative_member = forms.CharField(label='ФИО / наименование', widget=forms.TextInput(attrs={'readonly': 'True'}))
+    meeting_attendant_type = forms.ChoiceField(label='Присутствие на собрании', 
+                                choices=ATTENDANCE, widget=forms.Select(attrs={'onchange': 'check()'}))
+    representative = forms.CharField(label='Представитель члена кооператива', help_text='Введите ФИО', required=False)
+
+
+class ExtramuralExecutionAttendantForm(forms.Form):
+    SENDING = [
+        ('absent', 'Не отправил бюллетень'),
+        ('member', 'Член кооператива отправил бюллетень'),
+        ('representative', 'Представитель члена кооператива отправил бюллетень')
+    ]
+    cooperative_member_id = forms.IntegerField()
+    cooperative_member = forms.CharField(label='ФИО / наименование', widget=forms.TextInput(attrs={'readonly': 'True'}))
+    meeting_attendant_type = forms.ChoiceField(label='Отправка бюллетеней', 
+                choices=SENDING, widget=forms.Select(attrs={'onchange': 'check()'}))
+    representative = forms.CharField(label='Представитель члена кооператива', help_text='Введите ФИО', required=False)
+
+
 class MeetingChairmanAnotherMember(forms.Form):
     another_member = forms.CharField(label='Другое лицо', help_text='Введите ФИО')
 

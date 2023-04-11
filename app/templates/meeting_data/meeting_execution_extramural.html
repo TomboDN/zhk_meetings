@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <section class="py-4 py-xl-5" style="height: 377.725px;">
+        <div class="container">
+            <div class="row d-flex justify-content-center">
+                <div class="col-auto">
+                    <div class="card mb-5">
+                        <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
+                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Стадия проведения заочного собрания</h2>
+                            <form method="post">
+                                {% csrf_token %}
+
+                                {{ attendant_formset.management_form }}
+                                <legend>Укажите членов кооператива, приславших бюллетень</legend>
+                                
+                                {% for attendant_form in attendant_formset %}                                
+
+                                    <div class="member-formset d-flex flex-row justify-content-left align-items-left align-content-left">
+                                        {{ attendant_form.cooperative_member_id.as_hidden }}
+
+                                        {{ attendant_form.cooperative_member|as_crispy_field }}
+                                        {% if attendant_form.cooperative_member.errors %}
+                                            {% for error in attendant_form.cooperative_member.errors %}
+                                                {{ error|escape }}
+                                            {% endfor %}
+                                        {% endif %}
+                                    
+                                        {{ attendant_form.meeting_attendant_type|as_crispy_field }}
+                                        {% if attendant_form.meeting_attendant_type.errors %}
+                                            {% for error in attendant_form.meeting_attendant_type.errors %}
+                                                {{ error|escape }}
+                                            {% endfor %}
+                                        {% endif %}
+
+                                        <div id="representative{{forloop.counter0}}" style="display: none;">
+                                            {{ attendant_form.representative|as_crispy_field }}
+                                            {% if attendant_form.representative.errors %}
+                                                {% for error in attendant_form.representative.errors %}
+                                                    {{ error|escape }}
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                                                    
+                                    </div>
+
+                                    <script>
+                                        var num_forms={{forloop.counter0}}
+                                    </script>
+
+                                {% endfor %}
+
+                                
+                                {% if attendant_formset.non_form_errors %}
+                                    {% for error in attendant_formset.non_form_errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+                                </div>                                
+                                <button class="btn btn-primary d-block w-100" id="submit" type="submit">
+                                    Сохранить и продолжить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function check() {
+            for (var index = 0; index <= num_forms; index++) { 
+                console.log(document.getElementById("id_form-"+index+"-meeting_attendant_type").value)
+                if (document.getElementById("id_form-"+index+"-meeting_attendant_type").value == 'representative') {
+                    document.getElementById("representative"+index).style.display = "block";
+                } else {
+                    document.getElementById("representative"+index).style.display = "none";
+                }
+            }
+        }
+    </script>
+
+{% endblock content %}
