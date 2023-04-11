@@ -249,7 +249,10 @@ def execution_sub_question_redirect(meeting_id, question_id, sub_question_id):
                                                     question_id=question_id,
                                                     sub_question_id=sub_question_id,
                                                     decision__isnull=True).exists():
-        if question_id == 6 and (sub_question_id == 1 or sub_question_id == 5):
+        if meeting.meeting_format == "extramural":
+            return redirect(
+                '/execution_voting/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
+        elif question_id == 6 and (sub_question_id == 1 or sub_question_id == 5):
             return redirect(
                 '/execution_before_info/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
         else:
@@ -985,7 +988,10 @@ def meeting_execution_attendance_intramural(request, meeting_id):
                     meeting.quorum = quorum
                     meeting.save()
                     CooperativeMeetingAttendant.objects.bulk_create(attendants)
-                    return sub_question_init(meeting_id)
+                    if quorum is True:
+                        return sub_question_init(meeting_id)
+                    else:
+                        return redirect('/meeting_finish/' + str(meeting_id))
 
             except IntegrityError:
                 return redirect('/meeting_execution_intramural/' + str(meeting_id))
@@ -1040,7 +1046,10 @@ def meeting_execution_attendance_extramural(request, meeting_id):
                     meeting.quorum = quorum
                     meeting.save()
                     CooperativeMeetingAttendant.objects.bulk_create(attendants)
-                    return sub_question_init(meeting_id)
+                    if quorum is True:
+                        return sub_question_init(meeting_id)
+                    else:
+                        return redirect('/meeting_finish/' + str(meeting_id))
 
             except IntegrityError:
                 return redirect('/meeting_execution_extramural/' + str(meeting_id))

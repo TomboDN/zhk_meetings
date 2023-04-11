@@ -14,7 +14,7 @@
                                     {{ form.date|as_crispy_field }}
                                 </div>
                                 <div style="display: none;" id="irrelevant_date" class="alert alert-danger" role="alert">
-                                  Собрание лучше проводить в период с 1 марта по 30 июня текущего года
+                                  Собрание должно проводиться в период с 1 марта по 30 июня текущего года
                                 </div>
                                 <div style="display: none;" id="too_soon" class="alert alert-danger" role="alert">
                                   Рекомендуется направлять уведомления не менее, чем за 21 день до проведения собрания или в иные сроки, которые установлены Уставом вашего кооператива
@@ -63,7 +63,7 @@
             } else {
                 document.getElementById("too_soon").style.display = "none";
             }
-            if ((marchFirst < selected_date) && (selected_date < juneThirtieth) && (m_type === 1)) {
+            if (((marchFirst < selected_date) && (selected_date < juneThirtieth) && (m_type === 1)) || (m_type === 2) || (m_type === 3)) {
                 document.getElementById("irrelevant_date").style.display = "none";
             } else {
                 document.getElementById("irrelevant_date").style.display = "block";
