@@ -9,7 +9,7 @@
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
                             <h2 class="mb-4" id="form_heading" style="margin-top: -40px;">{{ title }}</h2>
                             <p>{{ sub_question }}</p>
-                            <p>Голосовали:</p>
+                            <p>Голосовали: {{ attendants_number }} членов ЖК</p>
                             <form method="post">
                                 {% csrf_token %}
                                 {{ member_formset.management_form }}
@@ -41,6 +41,9 @@
                                 <div class="mb-3">
                                     {{ form.decision|as_crispy_field }}
                                 </div>
+                                <div style="display: none;" id="unequal_votes" class="alert alert-danger" role="alert">
+                                  Количество голосов не совпадает с числом голосовавших!
+                                </div>
 
                                 <button class="btn btn-primary d-block w-100" id="submit" type="submit">
                                     Перейти к следующему вопросу
@@ -52,4 +55,56 @@
             </div>
         </div>
     </section>
+    <script>
+        window.onload = check
+        let attendants_number = {{ attendants_number }};
+        let candidates_number = {{ member_formset.total_form_count }};
+        let member_limit = {{ member_limit }};
+        let submit_button = document.getElementById('submit')
+        let decision_select = document.getElementById('id_decision')
+
+        function compareVotes(a, b) {
+          if (a.get('votes_for') > b.get('votes_for')) return -1;
+          if (a.get('votes_for') === b.get('votes_for')) return 0;
+          if (a.get('votes_for') < b.get('votes_for')) return 1;
+        }
+
+        function check() {
+            let votes_abstained = document.getElementById('id_votes_abstained').value
+            let total_votes = +votes_abstained
+            let candidates_votes = []
+
+            for (let i = 0; i < candidates_number; i++){
+                let candidate_input_id = 'id_form-' + i + '-votes_for'
+                let candidate_votes_for = document.getElementById(candidate_input_id).value
+                total_votes += +candidate_votes_for
+                candidates_votes.push(new Map([['id', candidate_input_id], ['votes_for', candidate_votes_for]]))
+            }
+            if (candidates_votes.length > 1){
+                candidates_votes.sort(compareVotes)
+            }
+
+            if (total_votes !== attendants_number) {
+                submit_button.disabled = true;
+                document.getElementById("unequal_votes").style.display = "block";
+            } else {
+                submit_button.disabled = false;
+                document.getElementById("unequal_votes").style.display = "none";
+            }
+
+            if (((candidates_votes.length > member_limit) && (candidates_votes[member_limit - 1].get('votes_for') === candidates_votes[member_limit].get('votes_for'))) || (total_votes === 0)) {
+                let true_option = decision_select.querySelector('option[value="True"]')
+                if (typeof true_option != "undefined") {
+                    decision_select.removeChild(true_option)
+                }
+            } else {
+                if (decision_select.length === 1) {
+                    let newOption = document.createElement('option');
+                    newOption.value = 'True';
+                    newOption.innerHTML = 'Решение принято'
+                    decision_select.appendChild(newOption)
+                }
+            }
+        }
+    </script>
 {% endblock content %}

@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from django.forms.formsets import BaseFormSet
 from phonenumber_field.widgets import RegionalPhoneNumberWidget
+import datetime
 
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeQuestion
 
@@ -12,6 +13,13 @@ DECISION_CHOICE = [
     ('True', 'Решение принято'),
     ('False', 'Решение не принято'),
 ]
+
+
+def next_year(dt):
+    try:
+        return dt.replace(year=dt.year + 1)
+    except ValueError:
+        return dt + datetime.timedelta(days=365)
 
 
 class UserRegisterForm(UserCreationForm):
@@ -279,12 +287,16 @@ class MemberAcceptFioForm(forms.Form):
         label='ФИО гражданина/граждан, подавшего заявление о вступлении в члены ЖК (в родительном падеже)')
 
 
-class IntramuralPreparationForm(forms.ModelForm):
-    date = forms.DateField(label='Дата', widget=forms.NumberInput(attrs={'type': 'date'}))
+class RegularIntramuralPreparationForm(forms.ModelForm):
+    date = forms.DateField(label='Дата', widget=forms.NumberInput(
+        attrs={'type': 'date', 'min': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
+               'max': (next_year(datetime.date.today())).strftime(
+                   '%Y-%m-%d'), 'onchange': 'check()'}))
     time = forms.TimeField(label='Время', widget=forms.TimeInput(attrs={'type': 'time'}))
     place = forms.CharField(label='Место')
-    appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True}),
-                               help_text='Загрузите в поле необходимые приложения к Уведомлению в формате (?). '
+    appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True,
+                                                                                          'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
+                               help_text='Загрузите в поле необходимые приложения к Уведомлению в формате .doc, .docx, .pdf. '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
                                          'будут направлены членам кооператива вместе с Уведомлением.', required=False)
 
@@ -293,11 +305,33 @@ class IntramuralPreparationForm(forms.ModelForm):
         fields = ['date', 'time', 'place']
 
 
-class ExtramuralPreparationForm(forms.ModelForm):
-    date = forms.DateField(label='Дата окончания приема бюллетеней', widget=forms.NumberInput(attrs={'type': 'date'}))
+class IrregularIntramuralPreparationForm(forms.ModelForm):
+    date = forms.DateField(label='Дата', widget=forms.NumberInput(
+        attrs={'type': 'date', 'min': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
+               'max': (next_year(datetime.date.today())).strftime(
+                   '%Y-%m-%d'), 'onchange': 'check()'}))
+    time = forms.TimeField(label='Время', widget=forms.TimeInput(attrs={'type': 'time'}))
+    place = forms.CharField(label='Место')
+    appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True,
+                                                                                          'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
+                               help_text='Загрузите в поле необходимые приложения к Уведомлению в формате .doc, .docx, .pdf. '
+                                         'Название файла должно соответствовать содержанию документа. Приложения '
+                                         'будут направлены членам кооператива вместе с Уведомлением.', required=False)
+
+    class Meta:
+        model = CooperativeMeeting
+        fields = ['date', 'time', 'place']
+
+
+class IrregularExtramuralPreparationForm(forms.ModelForm):
+    date = forms.DateField(label='Дата окончания приема бюллетеней', widget=forms.NumberInput(
+        attrs={'type': 'date', 'min': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
+               'max': (next_year(datetime.date.today())).strftime(
+                   '%Y-%m-%d'), 'onchange': 'check()'}))
     time = forms.TimeField(label='Время окончания приема бюллетеней', widget=forms.TimeInput(attrs={'type': 'time'}))
-    appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True}),
-                               help_text='Загрузите в поле необходимые приложения к Уведомлению в формате (?). '
+    appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True,
+                                                                                          'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
+                               help_text='Загрузите в поле необходимые приложения к Уведомлению в формате .doc, .docx, .pdf. '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
                                          'будут направлены членам кооператива вместе с Уведомлением.', required=False)
 
@@ -332,8 +366,8 @@ class IntramuralExecutionAttendantForm(forms.Form):
     ]
     cooperative_member_id = forms.IntegerField()
     cooperative_member = forms.CharField(label='ФИО / наименование', widget=forms.TextInput(attrs={'readonly': 'True'}))
-    meeting_attendant_type = forms.ChoiceField(label='Присутствие на собрании', 
-                                choices=ATTENDANCE, widget=forms.Select(attrs={'onchange': 'check()'}))
+    meeting_attendant_type = forms.ChoiceField(label='Присутствие на собрании',
+                                               choices=ATTENDANCE, widget=forms.Select(attrs={'onchange': 'check()'}))
     representative = forms.CharField(label='Представитель члена кооператива', help_text='Введите ФИО', required=False)
 
 
@@ -345,8 +379,8 @@ class ExtramuralExecutionAttendantForm(forms.Form):
     ]
     cooperative_member_id = forms.IntegerField()
     cooperative_member = forms.CharField(label='ФИО / наименование', widget=forms.TextInput(attrs={'readonly': 'True'}))
-    meeting_attendant_type = forms.ChoiceField(label='Отправка бюллетеней', 
-                choices=SENDING, widget=forms.Select(attrs={'onchange': 'check()'}))
+    meeting_attendant_type = forms.ChoiceField(label='Отправка бюллетеней',
+                                               choices=SENDING, widget=forms.Select(attrs={'onchange': 'check()'}))
     representative = forms.CharField(label='Представитель члена кооператива', help_text='Введите ФИО', required=False)
 
 
@@ -369,9 +403,12 @@ class ExecutionAskedQuestion(forms.Form):
 
 
 class ExecutionVoting(forms.Form):
-    votes_for = forms.IntegerField(required=True, min_value=0, label=False, initial=0)
-    votes_against = forms.IntegerField(required=True, min_value=0, label=False, initial=0)
-    votes_abstained = forms.IntegerField(required=True, min_value=0, label=False, initial=0)
+    votes_for = forms.IntegerField(required=True, min_value=0, label=False, initial=0,
+                                   widget=forms.NumberInput(attrs={'onchange': 'check()'}))
+    votes_against = forms.IntegerField(required=True, min_value=0, label=False, initial=0,
+                                       widget=forms.NumberInput(attrs={'onchange': 'check()'}))
+    votes_abstained = forms.IntegerField(required=True, min_value=0, label=False, initial=0,
+                                         widget=forms.NumberInput(attrs={'onchange': 'check()'}))
     decision = forms.ChoiceField(choices=DECISION_CHOICE, widget=forms.Select, label='Решение')
 
 
@@ -385,13 +422,15 @@ class BoardMembersForm(forms.Form):
 
 
 class ExecutionFIOVoting(forms.Form):
-    votes_abstained = forms.IntegerField(required=False, min_value=0, label=False, initial=0)
+    votes_abstained = forms.IntegerField(required=False, min_value=0, label=False, initial=0,
+                                         widget=forms.NumberInput(attrs={'onchange': 'check()'}))
     decision = forms.ChoiceField(choices=DECISION_CHOICE, widget=forms.Select, label='Решение')
 
 
 class MemberVotes(forms.Form):
     fio = forms.CharField(required=True)
-    votes_for = forms.IntegerField(required=True, min_value=0, label=False, initial=0)
+    votes_for = forms.IntegerField(required=True, min_value=0, label=False, initial=0,
+                                   widget=forms.NumberInput(attrs={'onchange': 'check()'}))
 
 
 class BaseMemberVoteFormSet(BaseFormSet):
@@ -420,7 +459,12 @@ class BaseMemberVoteFormSet(BaseFormSet):
 
 class ExecutionTerminationDateForm(forms.Form):
     date = forms.DateField(label='Дата прекращения полномочий члена Правления:',
-                           widget=forms.NumberInput(attrs={'type': 'date'}))
+                           widget=forms.NumberInput(
+                               attrs={'type': 'date',
+                                      'min': (datetime.date.today() + datetime.timedelta(days=1)).strftime(
+                                          '%Y-%m-%d'),
+                                      'max': (next_year(datetime.date.today())).strftime(
+                                          '%Y-%m-%d')}))
 
 
 class MeetingFinishDateForm(forms.Form):

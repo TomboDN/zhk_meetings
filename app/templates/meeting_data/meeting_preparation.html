@@ -13,6 +13,12 @@
                                 <div class="mb-3">
                                     {{ form.date|as_crispy_field }}
                                 </div>
+                                <div style="display: none;" id="irrelevant_date" class="alert alert-danger" role="alert">
+                                  Собрание лучше проводить в период с 1 марта по 30 июня текущего года
+                                </div>
+                                <div style="display: none;" id="too_soon" class="alert alert-danger" role="alert">
+                                  Рекомендуется направлять уведомления не менее, чем за 21 день до проведения собрания или в иные сроки, которые установлены Уставом вашего кооператива
+                                </div>
                                 <div class="mb-3">
                                     {{ form.time|as_crispy_field }}
                                 </div>
@@ -39,4 +45,29 @@
             </div>
         </div>
     </section>
+    <script>
+        window.onload = check
+
+        function check() {
+            let m_type = {{ m_type }};
+            let selected_date = new Date(document.getElementById('id_date').value)
+            let today = new Date();
+            let yyyy = today.getFullYear();
+
+            let marchFirst = new Date(yyyy, 1, 28)
+            let juneThirtieth = new Date(yyyy, 6, 1)
+            let threeWeeksPastToday = new Date(today.getTime() + 20 * 24 * 60 * 60 * 1000);
+
+            if (selected_date < threeWeeksPastToday) {
+                document.getElementById("too_soon").style.display = "block";
+            } else {
+                document.getElementById("too_soon").style.display = "none";
+            }
+            if ((marchFirst < selected_date) && (selected_date < juneThirtieth) && (m_type === 1)) {
+                document.getElementById("irrelevant_date").style.display = "none";
+            } else {
+                document.getElementById("irrelevant_date").style.display = "block";
+            }
+        }
+    </script>
 {% endblock content %}

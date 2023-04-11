@@ -9,7 +9,7 @@
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
                             <h2 class="mb-4" id="form_heading" style="margin-top: -40px;">{{ title }}</h2>
                             <p>{{ sub_question }}</p>
-                            <p>Голосовали:</p>
+                            <p>Голосовали: {{ attendants_number }} членов ЖК</p>
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="mb-3">
@@ -28,6 +28,10 @@
                                     {{ form.decision|as_crispy_field }}
                                 </div>
 
+                                <div style="display: none;" id="unequal_votes" class="alert alert-danger" role="alert">
+                                  Количество голосов не совпадает с числом голосовавших!
+                                </div>
+
                                 <button class="btn btn-primary d-block w-100" id="submit" type="submit">
                                     Перейти к следующему вопросу
                                 </button>
@@ -38,4 +42,38 @@
             </div>
         </div>
     </section>
+    <script>
+        window.onload = check
+        let attendants_number = {{ attendants_number }};
+        let submit_button = document.getElementById('submit')
+        let decision_select = document.getElementById('id_decision')
+
+        function check() {
+            let votes_for = document.getElementById('id_votes_for').value
+            let votes_against = document.getElementById('id_votes_against').value
+            let votes_abstained = document.getElementById('id_votes_abstained').value
+            let total_votes = +votes_for + +votes_against + +votes_abstained
+            if (total_votes !== attendants_number) {
+                submit_button.disabled = true;
+                document.getElementById("unequal_votes").style.display = "block";
+            } else {
+                submit_button.disabled = false;
+                document.getElementById("unequal_votes").style.display = "none";
+            }
+            if ((votes_against >= votes_for) || (votes_for === 0)) {
+                let true_option = decision_select.querySelector('option[value="True"]')
+                if (typeof true_option != "undefined") {
+                    decision_select.removeChild(true_option)
+                }
+            } else {
+                if (decision_select.length === 1) {
+                    let newOption = document.createElement('option');
+                    newOption.value = 'True';
+                    newOption.innerHTML = 'Решение принято'
+                    decision_select.appendChild(newOption)
+                }
+            }
+        }
+
+    </script>
 {% endblock content %}

@@ -12,14 +12,15 @@ from doc import create_notification, create_requirement, create_decision
 from emails import send_notification
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
-    IntramuralQuestionsForm, IntramuralPreparationForm, CooperativeMeetingTypeForm, CooperativeMeetingFormatForm, \
-    ExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
+    IntramuralQuestionsForm, IrregularIntramuralPreparationForm, CooperativeMeetingTypeForm, \
+    CooperativeMeetingFormatForm, \
+    IrregularExtramuralPreparationForm, MeetingRequirementInitiatorReasonFrom, MeetingApprovalForm, \
     MemberRepresentativeForm, MeetingCooperativeReorganizationForm, MemberTransferFioForm, ChairmanMemberFioForm, \
     MemberAcceptFioForm, ExecutionForm, IntramuralExecutionAttendantForm, \
     ExtramuralExecutionAttendantForm, MeetingChairmanAnotherMember, \
     ExecutionAskedQuestion, ExecutionQuestionInfoForm, ExecutionVoting, ExecutionFIOVoting, MemberVotes, \
     ExecutionCooperativeReorganizationForm, BoardMembersCandidate, BaseMemberVoteFormSet, BoardMembersForm, \
-    ExecutionTerminationDateForm, MeetingFinishDateForm
+    ExecutionTerminationDateForm, MeetingFinishDateForm, RegularIntramuralPreparationForm
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberInitiator, \
     CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
     CooperativeAcceptedMember, CooperativeQuestion, CooperativeMeetingAskedQuestion, CooperativeMeetingSubQuestion, \
@@ -792,17 +793,18 @@ def meeting_members_reception(request, meeting_id):
 def meeting_preparation(request, meeting_id):
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
     cooperative_members = CooperativeMember.objects.filter(cooperative=meeting.cooperative)
-   
+
     if CooperativeReorganizationAcceptedMember.objects.filter(cooperative_meeting=meeting).exists():
-        reorganization_accepted_members = CooperativeReorganizationAcceptedMember.objects.filter(cooperative_meeting=meeting)
+        reorganization_accepted_members = CooperativeReorganizationAcceptedMember.objects.filter(
+            cooperative_meeting=meeting)
     else:
         reorganization_accepted_members = []
-    
+
     if CooperativeTerminatedMember.objects.filter(cooperative_meeting=meeting).exists():
         terminated_members = CooperativeTerminatedMember.objects.filter(cooperative_meeting=meeting)
     else:
         terminated_members = []
-        
+
     if CooperativeAcceptedMember.objects.filter(cooperative_meeting=meeting).exists():
         accepted_members = CooperativeAcceptedMember.objects.filter(cooperative_meeting=meeting)
     else:
@@ -817,21 +819,27 @@ def meeting_preparation(request, meeting_id):
 
     if meeting.meeting_type == "regular":
         title = "Стадия подготовки очередного собрания"
-        form = IntramuralPreparationForm()
+        form = RegularIntramuralPreparationForm()
+        m_type = 1
     elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
         title = "Стадия подготовки внеочередного очного собрания"
-        form = IntramuralPreparationForm()
+        form = IrregularIntramuralPreparationForm()
+        m_type = 2
     elif meeting.meeting_type == "irregular" and meeting.meeting_format == "extramural":
         title = "Стадия подготовки внеочередного заочного собрания"
-        form = ExtramuralPreparationForm()
+        form = IrregularExtramuralPreparationForm()
+        m_type = 3
 
     if request.method == "POST":
         if meeting.meeting_type == "regular":
-            form = IntramuralPreparationForm(request.POST)
+            form = RegularIntramuralPreparationForm(request.POST)
+            m_type = 1
         elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
-            form = IntramuralPreparationForm(request.POST)
+            form = IrregularIntramuralPreparationForm(request.POST)
+            m_type = 2
         elif meeting.meeting_type == "irregular" and meeting.meeting_format == "extramural":
-            form = ExtramuralPreparationForm(request.POST)
+            form = IrregularExtramuralPreparationForm(request.POST)
+            m_type = 3
 
         if form.is_valid():
             meeting = CooperativeMeeting.objects.get(id=meeting_id)
@@ -865,10 +873,10 @@ def meeting_preparation(request, meeting_id):
                 # TODO notification = create_notification(meeting)
                 notification_number = 1
                 for member in cooperative_members:
-                    notification = create_notification(notification_number, member.pk, 
-                                                member.fio, meeting, responsible_name,
-                                                convert_name, reorganization_accepted_members, 
-                                                terminated_members, accepted_members, files)
+                    notification = create_notification(notification_number, member.pk,
+                                                       member.fio, meeting, responsible_name,
+                                                       convert_name, reorganization_accepted_members,
+                                                       terminated_members, accepted_members, files)
                     notification_number += 1
                 filename = "Уведомление.docx"
                 response = HttpResponse(notification,
@@ -891,7 +899,7 @@ def meeting_preparation(request, meeting_id):
             return redirect('/intramural_preparation')
 
     return render(request=request, template_name="meeting_data/meeting_preparation.html",
-                  context={"form": form, "title": title, 'm_id': meeting_id,})
+                  context={"form": form, "title": title, 'm_id': meeting_id, 'm_type': m_type })
 
 
 @login_required
@@ -914,9 +922,9 @@ def meeting_execution(request, meeting_id):
 
                 except IntegrityError:
                     return redirect('/meeting_execution/' + str(meeting_id))
-            
+
                 return execution_redirect(meeting_id)
-                        
+
             elif meeting_chairman_type == 'member':
                 try:
                     with transaction.atomic():
@@ -928,14 +936,14 @@ def meeting_execution(request, meeting_id):
 
                 except IntegrityError:
                     return redirect('/meeting_execution/' + str(meeting_id))
-            
+
                 return execution_redirect(meeting_id)
 
         else:
             return redirect('/meeting_execution/' + str(meeting_id))
-    
+
     return render(request=request, template_name="meeting_data/meeting_execution.html",
-                  context={'form' : form})
+                  context={'form': form})
 
 
 @login_required
@@ -949,7 +957,7 @@ def meeting_execution_attendance_intramural(request, meeting_id):
     if request.method == "POST":
         attendant_formset = attendant_form_set(request.POST)
 
-        if attendant_formset.is_valid() :
+        if attendant_formset.is_valid():
             attendants = []
 
             for attendant_form in attendant_formset:
@@ -960,13 +968,13 @@ def meeting_execution_attendance_intramural(request, meeting_id):
 
                 if cooperative_member and representative and meeting_attendant_type == 'representative':
                     attendants.append(CooperativeMeetingAttendant(cooperative_meeting=cooperative_meeting,
-                                                                        cooperative_member=cooperative_member,
-                                                                        representative_attends=True,
-                                                                        representative_name=representative))
+                                                                  cooperative_member=cooperative_member,
+                                                                  representative_attends=True,
+                                                                  representative_name=representative))
                 elif cooperative_member and meeting_attendant_type == "member":
                     attendants.append(CooperativeMeetingAttendant(cooperative_meeting=cooperative_meeting,
-                                                                        cooperative_member=cooperative_member))
-                    
+                                                                  cooperative_member=cooperative_member))
+
             quorum = True
             if len(attendants) <= 0.5 * CooperativeMember.objects.count():
                 quorum = False
@@ -981,7 +989,7 @@ def meeting_execution_attendance_intramural(request, meeting_id):
 
             except IntegrityError:
                 return redirect('/meeting_execution_intramural/' + str(meeting_id))
-            
+
         else:
             return redirect('/meeting_execution_intramural/' + str(meeting_id))
     else:
@@ -1004,7 +1012,7 @@ def meeting_execution_attendance_extramural(request, meeting_id):
     if request.method == "POST":
         attendant_formset = attendant_form_set(request.POST)
 
-        if attendant_formset.is_valid() :
+        if attendant_formset.is_valid():
             attendants = []
 
             for attendant_form in attendant_formset:
@@ -1015,13 +1023,13 @@ def meeting_execution_attendance_extramural(request, meeting_id):
 
                 if cooperative_member and representative and meeting_attendant_type == 'representative':
                     attendants.append(CooperativeMeetingAttendant(cooperative_meeting=cooperative_meeting,
-                                                                        cooperative_member=cooperative_member,
-                                                                        representative_attends=True,
-                                                                        representative_name=representative))
+                                                                  cooperative_member=cooperative_member,
+                                                                  representative_attends=True,
+                                                                  representative_name=representative))
                 elif cooperative_member and meeting_attendant_type == "member":
                     attendants.append(CooperativeMeetingAttendant(cooperative_meeting=cooperative_meeting,
-                                                                        cooperative_member=cooperative_member))
-                    
+                                                                  cooperative_member=cooperative_member))
+
             quorum = True
             if len(attendants) <= 0.5 * CooperativeMember.objects.count():
                 quorum = False
@@ -1036,7 +1044,7 @@ def meeting_execution_attendance_extramural(request, meeting_id):
 
             except IntegrityError:
                 return redirect('/meeting_execution_extramural/' + str(meeting_id))
-            
+
         else:
             return redirect('/meeting_execution_extramural/' + str(meeting_id))
     else:
@@ -1186,6 +1194,8 @@ def execution_voting(request, meeting_id, question_id, sub_question_id):
     sub_question_object = CooperativeMeetingSubQuestion.objects.get(cooperative_meeting=cooperative_meeting,
                                                                     question_id=question_id,
                                                                     sub_question_id=sub_question_id)
+    attendants_number = CooperativeMeetingAttendant.objects.filter(cooperative_meeting=cooperative_meeting,
+                                                                   cooperative_member__isnull=False).count()
 
     members_form_set = formset_factory(MemberVotes, formset=BaseFormSet, extra=0)
     if question_id == 6 and sub_question_id == 6:
@@ -1325,10 +1335,12 @@ def execution_voting(request, meeting_id, question_id, sub_question_id):
                                                                           accepted=True)
             for candidate in candidates:
                 candidate_data.append({'fio': candidate.fio})
+            member_limit = 1
         else:
             candidates = CooperativeMeetingMemberCandidate.objects.filter(sub_question=sub_question_object)
             for candidate in candidates:
                 candidate_data.append({'fio': candidate.fio})
+            member_limit = sub_question_object.member_limit
 
         member_formset = members_form_set(initial=candidate_data)
 
@@ -1337,6 +1349,8 @@ def execution_voting(request, meeting_id, question_id, sub_question_id):
             'sub_question': sub_question_object.sub_question,
             'form': form,
             'member_formset': member_formset,
+            'attendants_number': attendants_number,
+            'member_limit': member_limit,
         }
         return render(request=request, template_name="meeting_data/execution/vote_people.html", context=context)
 
@@ -1346,6 +1360,7 @@ def execution_voting(request, meeting_id, question_id, sub_question_id):
             'title': sub_question_object.title,
             'sub_question': sub_question_object.sub_question,
             'form': form,
+            'attendants_number': attendants_number,
         }
         return render(request=request, template_name="meeting_data/execution/vote_subquestion.html", context=context)
 
