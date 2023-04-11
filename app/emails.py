@@ -1,25 +1,66 @@
 import os
+import threading
 
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, send_mass_mail
 from zhk_meetings_app.models import CooperativeMember
 
 
-def send_notification(cooperative_meeting, user_attachments):
+class EmailThread(threading.Thread):
+    def __init__(self, email):
+        self.email = email
+        threading.Thread.__init__(self)
+
+    def run(self):
+        self.email.send()
+
+
+def send_notification_email(cooperative_meeting, notification, user_attachments, member_email):
+    if cooperative_meeting.meeting_type == "regular":
+        subject = "Уведомление об очередном собрании"
+        msg = "Уведомление об очередном собрании"
+    elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "intramural":
+        subject = "Уведомление о внеочередном очном собрании"
+        msg = "Уведомление о внеочередном очном собрании"
+    elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "extramural":
+        subject = "Уведомление о внеочередном заочном собрании"
+        msg = "Уведомление о внеочередном заочном собрании"
+
+    from_email = os.environ.get("EMAIL_HOST_USER")
+
+    mail = EmailMessage(
+        subject,
+        msg,
+        from_email,
+        [member_email],
+    )
+
+    mail.attach('Уведомление.docx', notification.getvalue(),
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
+    for file in user_attachments:
+        mail.attach(file.name, file.read(), file.content_type)
+
+    EmailThread(mail).start()
+
+
+def send_mass_email(email_list):
+    print(email_list)
+    send_mass_mail(email_list, fail_silently=False)
+
+
+def send_requirement(cooperative_meeting, requirement_file):
     cooperative = cooperative_meeting.cooperative
     cooperative_members = CooperativeMember.objects.filter(cooperative=cooperative)
     members_emails = set(member.email_address for member in cooperative_members)
     cooperative_emails = {cooperative.cooperative_email_address, cooperative.auditor_email_address}
     to_list = members_emails.union(cooperative_emails)
 
-    if cooperative_meeting.meeting_type == "regular":
-        subject = "Уведомление об очередном собрании"
-        msg = ...
-    elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "intramural":
-        subject = "Уведомление о внеочередном очном собрании"
-        msg = ...
+    if cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "intramural":
+        subject = "Требование о созыве внеочередного очного общего собрания"
+        msg = "Требование о созыве внеочередного очного общего собрания"
     elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "extramural":
-        subject = "Уведомление о внеочередном заочном собрании"
-        msg = ...
+        subject = "Требование о созыве внеочередного заочного общего собрания"
+        msg = "Требование о созыве внеочередного заочного общего собрания"
 
     from_email = os.environ.get("EMAIL_HOST_USER")
     to_email = to_list
@@ -31,11 +72,37 @@ def send_notification(cooperative_meeting, user_attachments):
         to_email,
     )
 
-    # TODO notification add
+    mail.attach('Требование.docx', requirement_file.getvalue(),
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
 
-    for file in user_attachments:
-        mail.attach(file.name, file.read(), file.content_type)
+    EmailThread(mail).start()
 
-    email_res = mail.send()
 
-    return email_res
+def send_decision(cooperative_meeting, decision_file):
+    cooperative = cooperative_meeting.cooperative
+    cooperative_members = CooperativeMember.objects.filter(cooperative=cooperative)
+    members_emails = set(member.email_address for member in cooperative_members)
+    cooperative_emails = {cooperative.cooperative_email_address, cooperative.auditor_email_address}
+    to_list = members_emails.union(cooperative_emails)
+
+    if cooperative_meeting.conduct_decision:
+        subject = "Решение о проведении внеочередного общего собрания"
+        msg = "Решение о проведении внеочередного общего собрания"
+    else:
+        subject = "Решение об отказе в проведении внеочередного общего собрания"
+        msg = "Решение об отказе в проведении внеочередного общего собрания"
+
+    from_email = os.environ.get("EMAIL_HOST_USER")
+    to_email = to_list
+
+    mail = EmailMessage(
+        subject,
+        msg,
+        from_email,
+        to_email,
+    )
+
+    mail.attach('Решение о проведении собрания.docx', decision_file.getvalue(),
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
+    EmailThread(mail).start()

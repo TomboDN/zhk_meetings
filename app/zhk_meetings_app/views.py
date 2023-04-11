@@ -9,7 +9,7 @@ from django.urls import reverse
 from urllib.parse import quote
 
 from doc import create_notification, create_requirement, create_decision
-from emails import send_notification
+from emails import *
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
     IntramuralQuestionsForm, IrregularIntramuralPreparationForm, CooperativeMeetingTypeForm, \
@@ -559,16 +559,15 @@ def meeting_requirement_creation(request, meeting_id):
     if cooperative_meeting.meeting_type == 'regular':
         return redirect('/meeting_preparation/' + str(meeting_id))
     if request.method == "POST":
+        if cooperative_meeting.initiator == 'members':
+            members = []
+            for member in cooperative_members:
+                members.append(member.fio)
+        else:
+            members = []
+
+        requirement = create_requirement(cooperative_meeting, members)
         if 'create_requirement' in request.POST:
-            if cooperative_meeting.initiator == 'members':
-                members = []
-                for member in cooperative_members:
-                    members.append(member.fio)
-            else:
-                members = []
-
-            requirement = create_requirement(cooperative_meeting, members)
-
             filename = "Требование.docx"
             response = HttpResponse(requirement,
                                     content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -587,6 +586,7 @@ def meeting_requirement_creation(request, meeting_id):
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
                     meeting.meeting_stage = 'requirement-approval'
                     meeting.save()
+                    send_requirement(meeting, requirement)
                     return redirect('/meeting_requirement_approval/' + str(meeting_id))
 
             except IntegrityError:
@@ -627,11 +627,12 @@ def meeting_requirement_approval(request, meeting_id):
             except IntegrityError:
                 return redirect('/meeting_requirement_approval/' + str(meeting_id))
 
+            decision_number = 1
+            decision = create_decision(decision_number, meeting)
+
             if 'create_decision' in request.POST:
-                decision_number = 1
-                requirement = create_decision(decision_number, meeting)
                 filename = "Решение о проведении собрания.docx"
-                response = HttpResponse(requirement,
+                response = HttpResponse(decision,
                                         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
                 disposition = 'attachment'
                 try:
@@ -644,7 +645,7 @@ def meeting_requirement_approval(request, meeting_id):
 
             elif 'continue' in request.POST:
                 if conduct_decision == "True":
-                    # TODO SEND decision
+                    send_decision(meeting, decision)
                     return question_redirect(meeting_id)
                 else:
                     return redirect('/dashboard/')
@@ -871,16 +872,19 @@ def meeting_preparation(request, meeting_id):
                     return redirect('/meeting_preparation/' + str(meeting_id))
 
             files = request.FILES.getlist('appendix')
-
             if 'create_notification' in request.POST:
-                # TODO notification = create_notification(meeting)
+
                 notification_number = 1
                 for member in cooperative_members:
                     notification = create_notification(notification_number, member.pk,
                                                        member.fio, meeting, responsible_name,
                                                        convert_name, reorganization_accepted_members,
                                                        terminated_members, accepted_members, files)
+                    send_notification_email(cooperative_meeting=meeting, notification=notification,
+                                            user_attachments=files,
+                                            member_email=member.email_address)
                     notification_number += 1
+
                 filename = "Уведомление.docx"
                 response = HttpResponse(notification,
                                         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -894,15 +898,24 @@ def meeting_preparation(request, meeting_id):
                 return response
 
             elif 'save_and_continue' in request.POST:
-                # files = request.FILES.getlist('appendix')
-                # send_notification(meeting, files)
+                notification_number = 1
+                for member in cooperative_members:
+                    notification = create_notification(notification_number, member.pk,
+                                                       member.fio, meeting, responsible_name,
+                                                       convert_name, reorganization_accepted_members,
+                                                       terminated_members, accepted_members, files)
+                    send_notification_email(cooperative_meeting=meeting, notification=notification,
+                                            user_attachments=files,
+                                            member_email=member.email_address)
+                    notification_number += 1
+
                 return redirect('/meeting_execution/' + str(meeting_id))
 
         else:
             return redirect('/intramural_preparation')
 
     return render(request=request, template_name="meeting_data/meeting_preparation.html",
-                  context={"form": form, "title": title, 'm_id': meeting_id, 'm_type': m_type })
+                  context={"form": form, "title": title, 'm_id': meeting_id, 'm_type': m_type})
 
 
 @login_required
