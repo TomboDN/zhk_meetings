@@ -20,7 +20,7 @@ def create_list(attendants, meeting):
     hours = str(meeting.time).split(':')[0]
     minutes = str(meeting.time).split(':')[1]
 
-    context = { 'cooperative_name': meeting.cooperative.cooperative_name,
+    context = {'cooperative_name': meeting.cooperative.cooperative_name,
                'cooperative_address': meeting.cooperative.cooperative_address,
                'cooperative_itn': meeting.cooperative.cooperative_itn,
                'cooperative_telephone_number': meeting.cooperative.cooperative_telephone_number,
@@ -28,11 +28,8 @@ def create_list(attendants, meeting):
                'date': meeting.date,
                'hours': hours,
                'minutes': minutes,
-               'chairman_name': meeting.cooperative.chairman_name}
-
-    tpl.render(context)
-
-    context = { 'list': []}
+               'chairman_name': meeting.cooperative.chairman_name,
+               'list': []}
 
     i = 1
     for member in attendants:
@@ -40,11 +37,11 @@ def create_list(attendants, meeting):
             fio = member.representative_name + '\n'
         else:
             fio = member.cooperative_member.fio + '\n'
-        
+
         d = {
-                'n': str(i)+'.',
-                'fio': fio,
-            }
+            'n': str(i) + '.',
+            'fio': fio,
+        }
         context['list'].append(d)
         i += 1
 
@@ -57,16 +54,17 @@ def create_list(attendants, meeting):
     return file_stream
 
 
-#def create_bulletin():
+# def create_bulletin():
 
 
 def create_protocol(cooperative_member, meeting, convert_name, attendants, speakers, asked_questions,
-                    terminated_members, accepted_members, reorganization_accepted_members):    
+                    terminated_members, accepted_members, reorganization_accepted_members):
     members = '\t'
     number = 1
     for member in attendants:
         if member.representative_attends:
-            members += str(number) + '. ' + member.representative_name + ', Представитель члена ЖК ' + member.cooperative_member.fio + '\n\t'
+            members += str(
+                number) + '. ' + member.representative_name + ', Представитель члена ЖК ' + member.cooperative_member.fio + '\n\t'
         else:
             members += str(number) + '. ' + member.cooperative_member.fio + '\n\t'
         number += 1
@@ -84,45 +82,46 @@ def create_protocol(cooperative_member, meeting, convert_name, attendants, speak
         speech = ''
         if question.question == 'Принятие решения о реорганизации кооператива':
             for member in reorganization_accepted_members:
-                questions.append('Принятие '+member.fio+
-                             ' в члены товарищества собственников жилья «'+convert_name+'»')           
-        
+                questions.append('Принятие ' + member.fio +
+                                 ' в члены товарищества собственников жилья «' + convert_name + '»')
+
         elif question.question == 'Прекращение полномочий отдельных членов правления':
             for member in terminated_members:
                 questions.append('Досрочное прекращение полномочий члена Правления жилищного кооператива '
-                                 +member.fio+'.')
-        
+                                 + member.fio + '.')
+
         elif question.question == 'Принятие решения о приеме граждан в члены кооператива':
             for member in accepted_members:
                 questions.append('Принятие решения о приеме '
-                                 +member.fio+' в члены Жилищного кооператива')
-               
+                                 + member.fio + ' в члены Жилищного кооператива')
+
         elif question.question == 'Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива':
-            questions.append('Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива')
-        
+            questions.append(
+                'Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива')
+
         else:
             continue
 
         for speaker in speakers:
             if speaker.question_id == question.pk:
-                    speech += str(number) + '.  По вопросу повестки дня выступил: ' + speaker.speaker
-                    speech += '\n\tОсновные тезисы выступления: ' + speaker.theses
-                    speech += '\n\tБыли заданы вопросы:'
-                    number_2 = 1
-                    for asked_question in asked_questions:
-                        if asked_question.sub_question == speaker.pk:
-                            speech += '\n\t\t' + str(number_2) + ') ' + asked_question.question
-                            number_2 += 1
+                speech += str(number) + '.  По вопросу повестки дня выступил: ' + speaker.speaker
+                speech += '\n\tОсновные тезисы выступления: ' + speaker.theses
+                speech += '\n\tБыли заданы вопросы:'
+                number_2 = 1
+                for asked_question in asked_questions:
+                    if asked_question.sub_question.id == speaker.pk:
+                        speech += '\n\t\t' + str(number_2) + ') ' + asked_question.question
+                        number_2 += 1
 
-                    speech += '\n\n\tПо вопросу повестки дня голосовали:\n\t'
-                    speech += 'За - ' + str(speaker.votes_for) + ', '
-                    speech += 'Против - ' + str(speaker.votes_against) + ', '
-                    speech += 'Воздержался - ' + str(speaker.votes_abstained)
-                    speech += '\n\n\tПо вопросу повестки дня постановили:'
-                    if speaker.decision:
-                        speech += '\n\tРешение принято\n'
-                    else:
-                        speech += '\n\tРешение не принято\n'
+                speech += '\n\n\tПо вопросу повестки дня голосовали:\n\t'
+                speech += 'За - ' + str(speaker.votes_for) + ', '
+                speech += 'Против - ' + str(speaker.votes_against) + ', '
+                speech += 'Воздержался - ' + str(speaker.votes_abstained)
+                speech += '\n\n\tПо вопросу повестки дня постановили:'
+                if speaker.decision:
+                    speech += '\n\tРешение принято\n'
+                else:
+                    speech += '\n\tРешение не принято\n'
 
         number += 1
         full_speech += speech
@@ -144,8 +143,8 @@ def create_protocol(cooperative_member, meeting, convert_name, attendants, speak
                'questions': questions_string,
                'vote_counter': meeting.vote_counter}
 
-
-    if meeting.meeting_type == 'regular':
+    if (meeting.meeting_type == 'regular' and meeting.quorum) or (
+            meeting.meeting_format == 'intramural' and meeting.quorum):
         doc = DocxTemplate("/usr/src/app/doc/Protocol_regular.docx")
         context['speech'] = full_speech
 
@@ -158,7 +157,6 @@ def create_protocol(cooperative_member, meeting, convert_name, attendants, speak
 
     else:
         doc = DocxTemplate("/usr/src/app/doc/Protocol_intramural_no_quorum.docx")
-
 
     doc.render(context)
     doc.save('/usr/src/app/notification.docx')
@@ -192,7 +190,6 @@ def create_decision(decision_number, meeting):
     questions_string = '\n\t\t'
     for index, question in enumerate(questions):
         questions_string = questions_string + str(index + 1) + '. ' + question + '\n\t\t'
-    
 
     context = {'number': number,
                'cooperative_name': meeting.cooperative.cooperative_name,
@@ -256,7 +253,7 @@ def create_requirement(meeting, members):
     questions = []
     for question in questions_list.all():
         questions.append(question.question)
-    
+
     questions_string = strings_creating(0, questions)
 
     context = {'name': name,
@@ -281,16 +278,15 @@ def create_requirement(meeting, members):
     return file_stream
 
 
-def create_notification(notification_number, pk, fio, meeting, responsible_name, convert_name, 
-                 reorganization_accepted_members, terminated_members, accepted_members, files):
-    
+def create_notification(notification_number, pk, fio, meeting, responsible_name, convert_name,
+                        reorganization_accepted_members, terminated_members, accepted_members, files):
     hours = str(meeting.time).split(':')[0]
     minutes = str(meeting.time).split(':')[1]
 
-    if files:    
+    if files:
         filenames = []
         for file in files:
-            filenames.append(file.name)
+            filenames.append(file.name.rsplit('.', 1)[0])
 
         filenames_string = 'Приложения:\n' + strings_creating(0, filenames)
     else:
@@ -307,30 +303,31 @@ def create_notification(notification_number, pk, fio, meeting, responsible_name,
 
     questions = []
     questions_shift = 0
-    
+
     if 'Принятие решения о реорганизации кооператива' in chosen_questions:
         questions_shift = 7
         for member in reorganization_accepted_members:
-            questions.append('Принятие '+member.fio+
-                             ' в члены товарищества собственников жилья «'+convert_name+'»')     
+            questions.append('Принятие ' + member.fio +
+                             ' в члены товарищества собственников жилья «' + convert_name + '»')
 
     for question in chosen_questions:
         if question == 'Прекращение полномочий отдельных членов правления':
             for member in terminated_members:
                 questions.append('Досрочное прекращение полномочий члена Правления жилищного кооператива '
-                                 +member.fio+'.')
-        
+                                 + member.fio + '.')
+
         elif question == 'Принятие решения о приеме граждан в члены кооператива':
             for member in accepted_members:
                 questions.append('Принятие решения о приеме '
-                                 +member.fio+' в члены Жилищного кооператива')
-               
+                                 + member.fio + ' в члены Жилищного кооператива')
+
         elif question == 'Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива':
-            questions.append('Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива')
-        
+            questions.append(
+                'Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива')
+
         else:
             continue
-    
+
     questions_string = strings_creating(questions_shift, questions)
 
     context = {'member_name': fio,
@@ -346,7 +343,6 @@ def create_notification(notification_number, pk, fio, meeting, responsible_name,
                'filenames': filenames_string,
                'chairman_name': meeting.cooperative.chairman_name,
                'today_date': today_date}
-
 
     if meeting.meeting_type == 'regular':
         if 'Принятие решения о реорганизации кооператива' in chosen_questions:
@@ -380,4 +376,3 @@ def create_notification(notification_number, pk, fio, meeting, responsible_name,
     doc.save(file_stream)
     file_stream.seek(0)
     return file_stream
-

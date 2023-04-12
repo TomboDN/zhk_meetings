@@ -15,15 +15,13 @@ class EmailThread(threading.Thread):
 
         
 def send_protocol(cooperative_meeting, protocol, member_email):
+    msg = 'Здравствуйте! Сервис для проведения общих собраний членов жилищных кооперативов "Умное собрание" предлагает ознакомиться с информацией в приложении.'
     if cooperative_meeting.meeting_type == "regular":
         subject = "Протокол очередного собрания"
-        msg = "Протокол очередного собрания"
     elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "intramural":
         subject = "Протокол внеочередного очного собрания"
-        msg = "Протокол внеочередного очного собрания"
     elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "extramural":
         subject = "Протокол внеочередного заочного собрания"
-        msg = "Протокол внеочередного заочного собрания"
 
     from_email = os.environ.get("EMAIL_HOST_USER")
 
@@ -41,15 +39,13 @@ def send_protocol(cooperative_meeting, protocol, member_email):
 
     
 def send_notification_email(cooperative_meeting, notification, user_attachments, member_email):
+    msg = 'Здравствуйте! Сервис для проведения общих собраний членов жилищных кооперативов "Умное собрание" предлагает ознакомиться с информацией в приложении.'
     if cooperative_meeting.meeting_type == "regular":
         subject = "Уведомление об очередном собрании"
-        msg = "Уведомление об очередном собрании"
     elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "intramural":
         subject = "Уведомление о внеочередном очном собрании"
-        msg = "Уведомление о внеочередном очном собрании"
     elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "extramural":
         subject = "Уведомление о внеочередном заочном собрании"
-        msg = "Уведомление о внеочередном заочном собрании"
 
     from_email = os.environ.get("EMAIL_HOST_USER")
 
@@ -81,12 +77,11 @@ def send_requirement(cooperative_meeting, requirement_file):
     cooperative_emails = {cooperative.cooperative_email_address, cooperative.auditor_email_address}
     to_list = members_emails.union(cooperative_emails)
 
+    msg = 'Здравствуйте! Сервис для проведения общих собраний членов жилищных кооперативов "Умное собрание" предлагает ознакомиться с информацией в приложении.'
     if cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "intramural":
         subject = "Требование о созыве внеочередного очного общего собрания"
-        msg = "Требование о созыве внеочередного очного общего собрания"
     elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "extramural":
         subject = "Требование о созыве внеочередного заочного общего собрания"
-        msg = "Требование о созыве внеочередного заочного общего собрания"
 
     from_email = os.environ.get("EMAIL_HOST_USER")
     to_email = to_list
@@ -111,12 +106,11 @@ def send_decision(cooperative_meeting, decision_file):
     cooperative_emails = {cooperative.cooperative_email_address, cooperative.auditor_email_address}
     to_list = members_emails.union(cooperative_emails)
 
+    msg = 'Здравствуйте! Сервис для проведения общих собраний членов жилищных кооперативов "Умное собрание" предлагает ознакомиться с информацией в приложении.'
     if cooperative_meeting.conduct_decision:
         subject = "Решение о проведении внеочередного общего собрания"
-        msg = "Решение о проведении внеочередного общего собрания"
     else:
         subject = "Решение об отказе в проведении внеочередного общего собрания"
-        msg = "Решение об отказе в проведении внеочередного общего собрания"
 
     from_email = os.environ.get("EMAIL_HOST_USER")
     to_email = to_list
