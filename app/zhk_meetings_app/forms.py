@@ -294,7 +294,7 @@ class RegularIntramuralPreparationForm(forms.ModelForm):
                    '%Y-%m-%d'), 'onchange': 'check()'}))
     time = forms.TimeField(label='Время', widget=forms.TimeInput(attrs={'type': 'time'}))
     place = forms.CharField(label='Место')
-    appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True,
+    appendix = forms.FileField(label=False, widget=forms.ClearableFileInput(attrs={'multiple': True,
                                                                                           'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
                                help_text='Загрузите в поле необходимые приложения к Уведомлению в формате .doc, .docx, .pdf. '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
@@ -312,7 +312,7 @@ class IrregularIntramuralPreparationForm(forms.ModelForm):
                    '%Y-%m-%d'), 'onchange': 'check()'}))
     time = forms.TimeField(label='Время', widget=forms.TimeInput(attrs={'type': 'time'}))
     place = forms.CharField(label='Место')
-    appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True,
+    appendix = forms.FileField(label=False, widget=forms.ClearableFileInput(attrs={'multiple': True,
                                                                                           'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
                                help_text='Загрузите в поле необходимые приложения к Уведомлению в формате .doc, .docx, .pdf. '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
@@ -329,7 +329,7 @@ class IrregularExtramuralPreparationForm(forms.ModelForm):
                'max': (next_year(datetime.date.today())).strftime(
                    '%Y-%m-%d'), 'onchange': 'check()'}))
     time = forms.TimeField(label='Время окончания приема бюллетеней', widget=forms.TimeInput(attrs={'type': 'time'}))
-    appendix = forms.FileField(label='Приложения', widget=forms.ClearableFileInput(attrs={'multiple': True,
+    appendix = forms.FileField(label=False, widget=forms.ClearableFileInput(attrs={'multiple': True,
                                                                                           'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
                                help_text='Загрузите в поле необходимые приложения к Уведомлению в формате .doc, .docx, .pdf. '
                                          'Название файла должно соответствовать содержанию документа. Приложения '

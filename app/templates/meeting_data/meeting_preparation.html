@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% load crispy_forms_tags %}
 {% block content %}
     <section class="py-4 py-xl-5" style="height: 377.725px;">
@@ -13,28 +14,46 @@
                                 <div class="mb-3">
                                     {{ form.date|as_crispy_field }}
                                 </div>
-                                <div style="display: none;" id="irrelevant_date" class="alert alert-danger" role="alert">
-                                  Собрание должно проводиться в период с 1 марта по 30 июня текущего года
+                                <div style="display: none;" id="irrelevant_date" class="alert alert-danger"
+                                     role="alert">
+                                    Собрание должно проводиться в период с 1 марта по 30 июня текущего года
                                 </div>
                                 <div style="display: none;" id="too_soon" class="alert alert-danger" role="alert">
-                                  Рекомендуется направлять уведомления не менее, чем за 21 день до проведения собрания или в иные сроки, которые установлены Уставом вашего кооператива
+                                    Рекомендуется направлять уведомления не менее, чем за 21 день до проведения собрания
+                                    или в иные сроки, которые установлены Уставом вашего кооператива
                                 </div>
                                 <div class="mb-3">
                                     {{ form.time|as_crispy_field }}
                                 </div>
                                 {% if form.place %}
                                     <div class="mb-3">
-                                    {{ form.place|as_crispy_field }}
-                                </div>
+                                        {{ form.place|as_crispy_field }}
+                                    </div>
                                 {% endif %}
                                 <div class="mb-3">
+                                    <div class="d-flex flex-row align-items-center">
+                                        <span style="margin-right: 10px">Приложения</span>
+                                        <button type="button" id="appendix-tip" class="original-border"
+                                                onclick="showTip()">
+                                            ?
+                                        </button>
+                                    </div>
+
                                     {{ form.appendix|as_crispy_field }}
                                 </div>
+                                <div style="display: none; white-space: pre-line;" id="t_data"
+                                     class="alert alert-primary" role="alert">
+                                    <p id="appendix-tooltip">
+                                        {{ tooltip_data }}
+                                    </p>
+                                </div>
                                 <div>
-                                    <button class="btn btn-primary d-block w-100" style="margin-bottom: 30px;" name="create_notification" id="create_notification" type="submit">
+                                    <button class="btn btn-primary d-block w-100" style="margin-bottom: 30px;"
+                                            name="create_notification" id="create_notification" type="submit">
                                         Сформировать уведомление
                                     </button>
-                                    <button class="btn btn-primary d-block w-100" name="save_and_continue" id="save_and_continue" type="submit">
+                                    <button class="btn btn-primary d-block w-100" name="save_and_continue"
+                                            id="save_and_continue" type="submit">
                                         Отправить и продолжить
                                     </button>
                                 </div>
@@ -47,6 +66,17 @@
     </section>
     <script>
         window.onload = check
+        const tip_div = document.getElementById('t_data')
+        let appendixTooltip = document.getElementById('appendix-tooltip')
+        appendixTooltip.innerText = appendixTooltip.innerText.trim()
+
+        function showTip() {
+            if (tip_div.style.display === "none") {
+                tip_div.style.display = "block"
+            } else {
+                tip_div.style.display = "none"
+            }
+        }
 
         function check() {
             let m_type = {{ m_type }};

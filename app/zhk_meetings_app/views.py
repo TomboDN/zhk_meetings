@@ -797,6 +797,7 @@ def meeting_members_reception(request, meeting_id):
 def meeting_preparation(request, meeting_id):
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
     cooperative_members = CooperativeMember.objects.filter(cooperative=meeting.cooperative)
+    meeting_questions_object = meeting.questions.all()
 
     if CooperativeReorganizationAcceptedMember.objects.filter(cooperative_meeting=meeting).exists():
         reorganization_accepted_members = CooperativeReorganizationAcceptedMember.objects.filter(
@@ -821,6 +822,38 @@ def meeting_preparation(request, meeting_id):
         responsible_name = ''
         convert_name = ''
 
+    tooltip_data = "Приложения:"
+    for question in meeting_questions_object:
+        if question.id == 6:
+            tooltip_data += """
+            
+            Для принятия решения о реорганизации кооператива:
+            1. Устав ТСЖ, в который преобразуется кооператив
+            2. Порядок реорганизации ЖК в форме преобразования в ТСЖ
+            3. Передаточный акт
+            4. Акты инвентаризации
+            5. При необходимости - другие документы в соответствии с ч. 3 ст. 11 Закона о бухгалтерском учете, п. п. 2.5, 4.1 и 5.6 Методических указаний по инвентаризации.
+            6. Кандидатуры на должность Председателя и членов Правления ТСЖ.
+            7. Список граждан, подавших заявления о приеме в члены ТСЖ.
+            8. Заявления граждан о приеме в члены ТСЖ.
+            """
+        elif question.id == 11:
+            tooltip_data += """
+            Для прекращения полномочий отдельных членов правления:
+            1. Заявление об увольнении по собственному желанию
+            ИЛИ 2. Жалоба/претензия членов ЖК на действия членов правления.
+            """
+        elif question.id == 16:
+            tooltip_data += """
+            Для утверждения годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива:
+            1. Проект годового отчета
+            2. Бухгалтерская отчетность за год
+            3. Заключение ревизионной комиссии
+            """
+        elif question.id == 20:
+            tooltip_data += """
+            Для принятия решения о приеме граждан в члены кооператива:
+            Заявление о вступлении в кооператив"""
     if meeting.meeting_type == "regular":
         title = "Стадия подготовки очередного собрания"
         form = RegularIntramuralPreparationForm()
@@ -915,7 +948,8 @@ def meeting_preparation(request, meeting_id):
             return redirect('/intramural_preparation')
 
     return render(request=request, template_name="meeting_data/meeting_preparation.html",
-                  context={"form": form, "title": title, 'm_id': meeting_id, 'm_type': m_type})
+                  context={"form": form, "title": title, 'm_id': meeting_id, 'm_type': m_type,
+                           'tooltip_data': tooltip_data})
 
 
 @login_required
