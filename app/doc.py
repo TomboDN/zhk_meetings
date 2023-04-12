@@ -1,5 +1,6 @@
 import datetime
 import io
+import jinja2
 
 from docxtpl import DocxTemplate
 
@@ -9,6 +10,162 @@ def strings_creating(shift, elements):
     for index, element in enumerate(elements):
         elements_string = elements_string + str(index + shift + 1) + '. ' + element + '\n\t'
     return elements_string
+
+
+def create_list(attendants, meeting):
+    tpl = DocxTemplate("/usr/src/app/doc/List.docx")
+
+    n = len(attendants)
+
+    hours = str(meeting.time).split(':')[0]
+    minutes = str(meeting.time).split(':')[1]
+
+    context = { 'cooperative_name': meeting.cooperative.cooperative_name,
+               'cooperative_address': meeting.cooperative.cooperative_address,
+               'cooperative_itn': meeting.cooperative.cooperative_itn,
+               'cooperative_telephone_number': meeting.cooperative.cooperative_telephone_number,
+               'cooperative_email_address': meeting.cooperative.cooperative_email_address,
+               'date': meeting.date,
+               'hours': hours,
+               'minutes': minutes,
+               'chairman_name': meeting.cooperative.chairman_name}
+
+    tpl.render(context)
+
+    context = { 'list': []}
+
+    i = 1
+    for member in attendants:
+        if member.representative_attends:
+            fio = member.representative_name + '\n'
+        else:
+            fio = member.cooperative_member.fio + '\n'
+        
+        d = {
+                'n': str(i)+'.',
+                'fio': fio,
+            }
+        context['list'].append(d)
+        i += 1
+
+    jinja_env = jinja2.Environment(autoescape=True)
+    tpl.render(context, jinja_env)
+    tpl.save('/usr/src/app/List.docx')
+    file_stream = io.BytesIO()
+    tpl.save(file_stream)
+    file_stream.seek(0)
+    return file_stream
+
+
+#def create_bulletin():
+
+
+def create_protocol(cooperative_member, meeting, convert_name, attendants, speakers, asked_questions,
+                    terminated_members, accepted_members, reorganization_accepted_members):    
+    members = '\t'
+    number = 1
+    for member in attendants:
+        if member.representative_attends:
+            members += str(number) + '. ' + member.representative_name + ', Представитель члена ЖК ' + member.cooperative_member.fio + '\n\t'
+        else:
+            members += str(number) + '. ' + member.cooperative_member.fio + '\n\t'
+        number += 1
+
+    questions_list = meeting.questions
+    chosen_questions = []
+    for question in questions_list.all():
+        chosen_questions.append(question)
+
+    questions = []
+    full_speech = ''
+    number = 1
+    for question in chosen_questions:
+
+        speech = ''
+        if question.question == 'Принятие решения о реорганизации кооператива':
+            for member in reorganization_accepted_members:
+                questions.append('Принятие '+member.fio+
+                             ' в члены товарищества собственников жилья «'+convert_name+'»')           
+        
+        elif question.question == 'Прекращение полномочий отдельных членов правления':
+            for member in terminated_members:
+                questions.append('Досрочное прекращение полномочий члена Правления жилищного кооператива '
+                                 +member.fio+'.')
+        
+        elif question.question == 'Принятие решения о приеме граждан в члены кооператива':
+            for member in accepted_members:
+                questions.append('Принятие решения о приеме '
+                                 +member.fio+' в члены Жилищного кооператива')
+               
+        elif question.question == 'Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива':
+            questions.append('Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива')
+        
+        else:
+            continue
+
+        for speaker in speakers:
+            if speaker.question_id == question.pk:
+                    speech += str(number) + '.  По вопросу повестки дня выступил: ' + speaker.speaker
+                    speech += '\n\tОсновные тезисы выступления: ' + speaker.theses
+                    speech += '\n\tБыли заданы вопросы:'
+                    number_2 = 1
+                    for asked_question in asked_questions:
+                        if asked_question.sub_question == speaker.pk:
+                            speech += '\n\t\t' + str(number_2) + ') ' + asked_question.question
+                            number_2 += 1
+
+                    speech += '\n\n\tПо вопросу повестки дня голосовали:\n\t'
+                    speech += 'За - ' + str(speaker.votes_for) + ', '
+                    speech += 'Против - ' + str(speaker.votes_against) + ', '
+                    speech += 'Воздержался - ' + str(speaker.votes_abstained)
+                    speech += '\n\n\tПо вопросу повестки дня постановили:'
+                    if speaker.decision:
+                        speech += '\n\tРешение принято\n'
+                    else:
+                        speech += '\n\tРешение не принято\n'
+
+        number += 1
+        full_speech += speech
+        speech = ''
+
+    questions_string = strings_creating(0, questions)
+
+    context = {'cooperative_name': meeting.cooperative.cooperative_name,
+               'cooperative_address': meeting.cooperative.cooperative_address,
+               'cooperative_itn': meeting.cooperative.cooperative_itn,
+               'cooperative_email_address': meeting.cooperative.cooperative_email_address,
+               'date': meeting.date,
+               'end_date': meeting.end_date,
+               'end_time': meeting.time,
+               'meeting_chairman': meeting.cooperative.chairman_name,
+               'secretary': meeting.secretary,
+               'email_address': cooperative_member.email_address,
+               'members': members,
+               'questions': questions_string,
+               'vote_counter': meeting.vote_counter}
+
+
+    if meeting.meeting_type == 'regular':
+        doc = DocxTemplate("/usr/src/app/doc/Protocol_regular.docx")
+        context['speech'] = full_speech
+
+    elif meeting.meeting_format == 'extramural' and meeting.quorum:
+        doc = DocxTemplate("/usr/src/app/doc/Protocol_extramural.docx")
+        context['speech'] = full_speech
+
+    elif meeting.meeting_format == 'extramural' and not meeting.quorum:
+        doc = DocxTemplate("/usr/src/app/doc/Protocol_extramural_no_quorum.docx")
+
+    else:
+        doc = DocxTemplate("/usr/src/app/doc/Protocol_intramural_no_quorum.docx")
+
+
+    doc.render(context)
+    doc.save('/usr/src/app/notification.docx')
+    file_stream = io.BytesIO()
+    doc.save(file_stream)
+    file_stream.seek(0)
+    return file_stream
 
 
 def create_decision(decision_number, meeting):
@@ -168,6 +325,9 @@ def create_notification(notification_number, pk, fio, meeting, responsible_name,
                 questions.append('Принятие решения о приеме '
                                  +member.fio+' в члены Жилищного кооператива')
                
+        elif question == 'Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива':
+            questions.append('Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива')
+        
         else:
             continue
     
@@ -220,3 +380,4 @@ def create_notification(notification_number, pk, fio, meeting, responsible_name,
     doc.save(file_stream)
     file_stream.seek(0)
     return file_stream
+
