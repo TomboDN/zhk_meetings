@@ -13,7 +13,33 @@ class EmailThread(threading.Thread):
     def run(self):
         self.email.send()
 
+        
+def send_protocol(cooperative_meeting, protocol, member_email):
+    if cooperative_meeting.meeting_type == "regular":
+        subject = "Протокол очередного собрания"
+        msg = "Протокол очередного собрания"
+    elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "intramural":
+        subject = "Протокол внеочередного очного собрания"
+        msg = "Протокол внеочередного очного собрания"
+    elif cooperative_meeting.meeting_type == "irregular" and cooperative_meeting.meeting_format == "extramural":
+        subject = "Протокол внеочередного заочного собрания"
+        msg = "Протокол внеочередного заочного собрания"
 
+    from_email = os.environ.get("EMAIL_HOST_USER")
+
+    mail = EmailMessage(
+        subject,
+        msg,
+        from_email,
+        [member_email],
+    )
+
+    mail.attach('Протокол.docx', protocol.getvalue(),
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
+    EmailThread(mail).start()
+
+    
 def send_notification_email(cooperative_meeting, notification, user_attachments, member_email):
     if cooperative_meeting.meeting_type == "regular":
         subject = "Уведомление об очередном собрании"
