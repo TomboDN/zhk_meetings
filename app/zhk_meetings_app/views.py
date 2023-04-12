@@ -8,7 +8,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
 from urllib.parse import quote
 
-from doc import create_notification, create_requirement, create_decision
+from doc import create_notification, create_requirement, create_decision, create_protocol, create_list
 from emails import *
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
@@ -552,15 +552,17 @@ def meeting_requirement_initiator_reason(request, meeting_id):
 @login_required
 def meeting_requirement_creation(request, meeting_id):
     cooperative_meeting = CooperativeMeeting.objects.get(id=meeting_id)
-    cooperative_members = CooperativeMember.objects.filter(
-        cooperative=cooperative_meeting.cooperative).order_by('email_address')
+    initiators = []
+    if CooperativeMemberInitiator.objects.filter(cooperative_meeting=cooperative_meeting).exists():
+        for initiator in CooperativeMemberInitiator.objects.filter(cooperative_meeting=cooperative_meeting):
+            initiators.append(initiator)
     if cooperative_meeting.meeting_type == 'regular':
         return redirect('/meeting_preparation/' + str(meeting_id))
     if request.method == "POST":
         if cooperative_meeting.initiator == 'members':
             members = []
-            for member in cooperative_members:
-                members.append(member.fio)
+            for member in initiators:
+                members.append(member.cooperative_member.fio)
         else:
             members = []
 
@@ -999,6 +1001,10 @@ def meeting_execution_attendance_intramural(request, meeting_id):
     cooperative_members = CooperativeMember.objects.filter(cooperative=cooperative)
     member_data = [{'cooperative_member_id': x.id, 'cooperative_member': x.fio}
                    for x in cooperative_members]
+    if CooperativeMeetingAttendant.objects.filter(cooperative_meeting=cooperative_meeting).exists():
+        attendants = CooperativeMeetingAttendant.objects.filter(cooperative_meeting=cooperative_meeting)
+    else:
+        attendants = []
     if request.method == "POST":
         attendant_formset = attendant_form_set(request.POST)
 
@@ -1023,7 +1029,22 @@ def meeting_execution_attendance_intramural(request, meeting_id):
             quorum = True
             if len(attendants) <= 0.5 * CooperativeMember.objects.count():
                 quorum = False
+            if 'turnout_list' in request.POST:
 
+                listt = create_list(attendants, cooperative_meeting)
+
+                filename = "Явочный лист.docx"
+                response = HttpResponse(listt,
+                                        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                disposition = 'attachment'
+                try:
+                    filename.encode('ascii')
+                    file_expr = 'filename="{}"'.format(filename)
+                except UnicodeEncodeError:
+                    file_expr = "filename*=utf-8''{}".format(quote(filename))
+                response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
+                return response
+                
             try:
                 with transaction.atomic():
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
@@ -1457,22 +1478,60 @@ def execution_after_info(request, meeting_id, question_id, sub_question_id):
 
 @login_required
 def meeting_finish(request, meeting_id):
+    meeting = CooperativeMeeting.objects.get(id=meeting_id)
+    cooperative_members = CooperativeMember.objects.filter(cooperative=meeting.cooperative)
+
+    if CooperativeReorganizationAcceptedMember.objects.filter(cooperative_meeting=meeting).exists():
+        reorganization_accepted_members = CooperativeReorganizationAcceptedMember.objects.filter(
+            cooperative_meeting=meeting)
+    else:
+        reorganization_accepted_members = []
+
+    if CooperativeTerminatedMember.objects.filter(cooperative_meeting=meeting).exists():
+        terminated_members = CooperativeTerminatedMember.objects.filter(cooperative_meeting=meeting)
+    else:
+        terminated_members = []
+
+    if CooperativeAcceptedMember.objects.filter(cooperative_meeting=meeting).exists():
+        accepted_members = CooperativeAcceptedMember.objects.filter(cooperative_meeting=meeting)
+    else:
+        accepted_members = []
+
+    if CooperativeMeetingReorganization.objects.filter(cooperative_meeting=meeting).exists():
+        convert_name = CooperativeMeetingReorganization.objects.get(cooperative_meeting=meeting).convert_name
+    else:
+        convert_name = ''
+
+    if CooperativeMeetingAttendant.objects.filter(cooperative_meeting=meeting).exists():
+        attendants = CooperativeMeetingAttendant.objects.filter(cooperative_meeting=meeting)
+    else:
+        attendants = []
+
+    if CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting).exists():
+        speakers = CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting)
+    else:
+        speakers = []
+
+    for speaker in speakers:
+        asked_questions = []
+        if CooperativeMeetingAskedQuestion.objects.filter(sub_question=speaker.sub_question_id).exists():
+            for asked_question in CooperativeMeetingAskedQuestion.objects.filter(sub_question=speaker.sub_question_id):
+                asked_questions.append(asked_question)
     if request.method == "POST":
         # TODO protocol = create_protocol(meeting_id)
         filename = "Протокол.docx"
 
         if 'create_protocol' in request.POST:
-            ...
-            # response = HttpResponse(protocol,
-            #                         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-            # disposition = 'attachment'
-            # try:
-            #     filename.encode('ascii')
-            #     file_expr = 'filename="{}"'.format(filename)
-            # except UnicodeEncodeError:
-            #     file_expr = "filename*=utf-8''{}".format(quote(filename))
-            # response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
-            # return response
+             response = HttpResponse(protocol,
+                                     content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+             disposition = 'attachment'
+             try:
+                 filename.encode('ascii')
+                 file_expr = 'filename="{}"'.format(filename)
+             except UnicodeEncodeError:
+                 file_expr = "filename*=utf-8''{}".format(quote(filename))
+             response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
+             return response
         elif 'send_protocol' in request.POST:
             ...
             # send_protocol(meeting_id, protocol)
