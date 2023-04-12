@@ -102,8 +102,6 @@ def execution_redirect(meeting_id):
 def sub_question_init(meeting_id):
     sub_questions_list = []
     meeting = CooperativeMeeting.objects.get(id=meeting_id)
-    if not meeting.quorum:
-        return redirect('/meeting_finish/' + str(meeting_id))
     meeting_questions_object = meeting.questions.all()
     for question in meeting_questions_object:
         if question.id == 6:
@@ -913,9 +911,6 @@ def meeting_preparation(request, meeting_id):
                                                        member.fio, meeting, responsible_name,
                                                        convert_name, reorganization_accepted_members,
                                                        terminated_members, accepted_members, files)
-                    send_notification_email(cooperative_meeting=meeting, notification=notification,
-                                            user_attachments=files,
-                                            member_email=member.email_address)
                     notification_number += 1
 
                 filename = "Уведомление.docx"
