@@ -394,12 +394,12 @@ class ExecutionCooperativeReorganizationForm(forms.Form):
 
 
 class ExecutionQuestionInfoForm(forms.Form):
-    speaker = forms.CharField(label='По вопросу выступил', help_text='ФИО')
-    theses = forms.CharField(label='Основные тезисы выступления', help_text='Основные тезисы', widget=forms.Textarea)
+    speaker = forms.CharField(required=False, label='По вопросу выступил', help_text='ФИО')
+    theses = forms.CharField(required=False, label='Основные тезисы выступления', help_text='Основные тезисы', widget=forms.Textarea)
 
 
 class ExecutionAskedQuestion(forms.Form):
-    question = forms.CharField(label='Были заданы вопросы:')
+    question = forms.CharField(required=False, label='Были заданы вопросы:')
 
 
 class ExecutionVoting(forms.Form):

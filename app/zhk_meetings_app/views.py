@@ -1224,15 +1224,22 @@ def execution_common_info(request, meeting_id, question_id, sub_question_id):
 
             for question_form in questions_formset:
                 question = question_form.cleaned_data.get('question')
-                questions_list.append(
-                    CooperativeMeetingAskedQuestion(sub_question=sub_question_object, question=question))
+                if question is not None:
+                    questions_list.append(
+                        CooperativeMeetingAskedQuestion(sub_question=sub_question_object, question=question))
 
             try:
                 with transaction.atomic():
-                    sub_question_object.speaker = form.cleaned_data.get('speaker')
-                    sub_question_object.theses = form.cleaned_data.get('theses')
-                    CooperativeMeetingAskedQuestion.objects.bulk_create(questions_list)
-                    sub_question_object.save()
+                    if sub_question_object.speaker is not None:
+                        sub_question_object.speaker = form.cleaned_data.get('speaker')
+                        changes = True
+                    if sub_question_object.theses is not None:
+                        sub_question_object.theses = form.cleaned_data.get('theses')
+                        changes = True
+                    if len(questions_list) > 0:
+                        CooperativeMeetingAskedQuestion.objects.bulk_create(questions_list)
+                    if changes:
+                        sub_question_object.save()
                     return redirect(
                         '/execution_voting/' + str(meeting_id) + '/' + str(question_id) + '/' + str(sub_question_id))
 
