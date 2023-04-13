@@ -56,9 +56,19 @@ def create_list(attendants, meeting):
 
 # def create_bulletin():
 
+no_quorum_new_meeting = {
+    True: "В связи с отсутствием кворума для рассмотрения вопросов повестки дня в предусмотренный "
+          "Уставом кооператива срок будет проведено повторное общее собрание членов жилищного "
+          "кооператива по той же повестке дня. Члены Кооператива будут уведомлены о времени и месте "
+          "проведения повторного общего собрания в сроки и порядки, установленные Уставом "
+          "кооператива.",
+    False: "Повторное общее собрание членов жилищного кооператива по той же повестке дня проводиться "
+           "не будет."
+}
+
 
 def create_protocol(cooperative_member, meeting, convert_name, attendants, speakers, asked_questions,
-                    terminated_members, accepted_members, reorganization_accepted_members):
+                    terminated_members, accepted_members, reorganization_accepted_members, new_meeting=None):
     members = '\t'
     number = 1
     for member in attendants:
@@ -157,6 +167,9 @@ def create_protocol(cooperative_member, meeting, convert_name, attendants, speak
 
     else:
         doc = DocxTemplate("/usr/src/app/doc/Protocol_intramural_no_quorum.docx")
+
+    if new_meeting is not None:
+        context['new_meeting'] = no_quorum_new_meeting[new_meeting]
 
     doc.render(context)
     doc.save('/usr/src/app/notification.docx')

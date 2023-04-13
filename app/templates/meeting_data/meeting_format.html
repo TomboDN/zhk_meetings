@@ -7,11 +7,36 @@
                 <div class="col-md-8 col-lg-6 col-xl-5 col-xxl-5">
                     <div class="card mb-5">
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
-                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Выберите формат собрания</h2>
+                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Выберите формат
+                                собрания</h2>
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="mb-3">
                                     {{ form.meeting_format|as_crispy_field }}
+                                </div>
+                                <div style="display: none; white-space: pre-line;" id="t_data1"
+                                     class="alert alert-primary" role="alert">
+                                    <p>
+                                        Члены кооператива собираются лично в назначенное время для обсуждения вопросов
+                                        повестки дня и принятия по ним решения. Участники не заполняют бюллетени, а
+                                        голосуют лично.
+
+                                        На внеочередном очном собрании могут быть рассмотрены любые вопросы, которые
+                                        предусмотрены Уставом, кроме тех, которые должны обязательно рассматриваться на
+                                        очередном собрании.
+                                    </p>
+                                </div>
+                                <div style="display: none; white-space: pre-line;" id="t_data2"
+                                     class="alert alert-primary" role="alert">
+                                    <p>
+                                        Членам кооператива направляются бюллетени для голосования, которые они должны
+                                        заполнить и направить по почтовому адресу, по электронной почте или любым другим
+                                        способом, который предусмотрен в Уставе вашего кооператива.
+
+                                        Некоторые вопросы не могут быть решены на общем собрании, поэтому перед выбором
+                                        этого формата рекомендуется уточнить, может ли нужный вам вопрос быть рассмотрен
+                                        в заочном формате в соответствии с вашим Уставом.
+                                    </p>
                                 </div>
                                 <div>
                                     <button class="btn btn-primary d-block w-100" id="submit" type="submit">
@@ -25,4 +50,55 @@
             </div>
         </div>
     </section>
+    <script>
+        const tip_div1 = document.getElementById('t_data1')
+        const tip_div2 = document.getElementById('t_data2')
+        let button1 = document.createElement('button');
+        button1.type = "button"
+        button1.id = "button1"
+        button1.className = "original-border"
+        button1.setAttribute("onclick", "showTip1()")
+        button1.setAttribute("style", "margin-left: 20px")
+        button1.innerText = "?"
+        let button2 = document.createElement('button');
+        button2.type = "button"
+        button2.id = "button2"
+        button2.className = "original-border"
+        button2.setAttribute("onclick", "showTip2()")
+        button2.setAttribute("style", "margin-left: 20px")
+        button2.innerText = "?"
+
+        let label_1 = document.querySelector("label[for=id_meeting_format_0]");
+        let label_2 = document.querySelector("label[for=id_meeting_format_1]");
+
+        insertAfter(label_1, button1)
+        insertAfter(label_2, button2)
+
+        let forms = document.getElementsByClassName("form-check");
+        for (let i = 0; i < forms.length; i++) {
+            forms.item(i).classList.add("d-flex");
+            forms.item(i).classList.add("flex-row");
+            forms.item(i).classList.add("align-items-center");
+        }
+
+        function showTip1() {
+            if (tip_div1.style.display === "none") {
+                tip_div1.style.display = "block"
+            } else {
+                tip_div1.style.display = "none"
+            }
+        }
+
+        function showTip2() {
+            if (tip_div2.style.display === "none") {
+                tip_div2.style.display = "block"
+            } else {
+                tip_div2.style.display = "none"
+            }
+        }
+
+        function insertAfter(referenceNode, newNode) {
+            referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+        }
+    </script>
 {% endblock content %}

@@ -9,7 +9,8 @@
                 <div class="col-auto">
                     <div class="card mb-5">
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
-                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Сведения о членах и органах кооператива</h2>
+                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Сведения о членах
+                                и органах кооператива</h2>
                             <form method="post" enctype="multipart/form-data">
                                 {% csrf_token %}
 
@@ -21,7 +22,24 @@
                                 {% endif %}
 
                                 {{ member_formset.management_form }}
-                                <p>Или введите сведения вручную</p>
+                                <div class="d-flex flex-row align-items-center">
+                                    <span>Или введите сведения вручную</span>
+                                    <button type="button" id="tip1" class="original-border"
+                                            onclick="showTip()">
+                                        ?
+                                    </button>
+                                </div>
+
+                                <div style="display: none; white-space: pre-line;" id="data1"
+                                     class="alert alert-primary" role="alert">
+                                    <p>
+                                        <a href="https://login.consultant.ru/link/?req=doc&demo=2&base=LAW&n=425471&dst=100666&date=12.04.2023">ч.
+                                            1 ст. 112 ЖК</a> - Количество членов жилищного кооператива не может быть
+                                        менее
+                                        чем пять, но не должно превышать количество жилых помещений в строящемся или
+                                        приобретаемом кооперативом многоквартирном доме.
+                                    </p>
+                                </div>
                                 {% for member_form in member_formset %}
 
                                     <div class="member-formset d-flex flex-row justify-content-between">
@@ -76,5 +94,15 @@
             deleteText: 'Удалить'
         });
     </script>
+    <script>
+        const tip_div = document.getElementById('data1')
 
+        function showTip() {
+            if (tip_div.style.display === "none") {
+                tip_div.style.display = "block"
+            } else {
+                tip_div.style.display = "none"
+            }
+        }
+    </script>
 {% endblock content %}

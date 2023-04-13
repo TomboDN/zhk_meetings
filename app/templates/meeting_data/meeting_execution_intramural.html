@@ -8,7 +8,21 @@
                 <div class="col-auto">
                     <div class="card mb-5">
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
-                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Стадия проведения очного собрания</h2>
+                            <div class="d-flex flex-row align-items-center">
+                                <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Стадия проведения очного собрания</h2>
+                                <button type="button" id="tip1" class="original-border"
+                                        onclick="showTip()">
+                                    ?
+                                </button>
+                            </div>
+                            <div style="display: none; white-space: pre-line;" id="data1"
+                                 class="alert alert-primary" role="alert">
+                                <p>
+                                    В соответствии с <a href="https://login.consultant.ru/link/?req=doc&demo=2&base=LAW&n=425471&dst=560&date=12.04.2023">ч. 1 ст. 117 ЖК РФ</a> общее собрание членов жилищного кооператива
+                                    является правомочным, если на нем присутствует более пятидесяти процентов членов
+                                    кооператива.
+                                </p>
+                            </div>
                             <form method="post">
                                 {% csrf_token %}
 
@@ -84,5 +98,15 @@
             }
         }
     </script>
+    <script>
+        const tip_div = document.getElementById('data1')
 
+        function showTip() {
+            if (tip_div.style.display === "none") {
+                tip_div.style.display = "block"
+            } else {
+                tip_div.style.display = "none"
+            }
+        }
+    </script>
 {% endblock content %}

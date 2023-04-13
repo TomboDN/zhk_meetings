@@ -87,6 +87,7 @@ class CooperativeMeeting(models.Model):
     secretary = models.CharField(max_length=255)
     end_date = models.DateField(null=True)
     quorum = models.BooleanField(null=True)
+    new_meeting = models.BooleanField(null=True)
 
 
 class CooperativeMemberInitiator(models.Model):

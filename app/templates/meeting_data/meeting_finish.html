@@ -10,6 +10,9 @@
                             <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Стадия принятия решения</h2>
                             <form method="post">
                                 {% csrf_token %}
+                                <div class="mb-3">
+                                    {{ form.new_meeting|as_crispy_field }}
+                                </div>
                                 <div>
                                     <button class="btn btn-primary d-block w-100" name="create_protocol"
                                             id="create_protocol" type="submit" style="margin-top: 40px; margin-bottom: 30px;">

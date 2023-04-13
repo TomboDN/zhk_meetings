@@ -295,7 +295,7 @@ class RegularIntramuralPreparationForm(forms.ModelForm):
     time = forms.TimeField(label='Время', widget=forms.TimeInput(attrs={'type': 'time'}))
     place = forms.CharField(label='Место')
     appendix = forms.FileField(label=False, widget=forms.ClearableFileInput(attrs={'multiple': True,
-                                                                                          'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
+                                                                                   'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
                                help_text='Загрузите в поле необходимые приложения к Уведомлению в формате .doc, .docx, .pdf. '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
                                          'будут направлены членам кооператива вместе с Уведомлением.', required=False)
@@ -313,7 +313,7 @@ class IrregularIntramuralPreparationForm(forms.ModelForm):
     time = forms.TimeField(label='Время', widget=forms.TimeInput(attrs={'type': 'time'}))
     place = forms.CharField(label='Место')
     appendix = forms.FileField(label=False, widget=forms.ClearableFileInput(attrs={'multiple': True,
-                                                                                          'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
+                                                                                   'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
                                help_text='Загрузите в поле необходимые приложения к Уведомлению в формате .doc, .docx, .pdf. '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
                                          'будут направлены членам кооператива вместе с Уведомлением.', required=False)
@@ -330,7 +330,7 @@ class IrregularExtramuralPreparationForm(forms.ModelForm):
                    '%Y-%m-%d'), 'onchange': 'check()'}))
     time = forms.TimeField(label='Время окончания приема бюллетеней', widget=forms.TimeInput(attrs={'type': 'time'}))
     appendix = forms.FileField(label=False, widget=forms.ClearableFileInput(attrs={'multiple': True,
-                                                                                          'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
+                                                                                   'accept': 'application/msword, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
                                help_text='Загрузите в поле необходимые приложения к Уведомлению в формате .doc, .docx, .pdf. '
                                          'Название файла должно соответствовать содержанию документа. Приложения '
                                          'будут направлены членам кооператива вместе с Уведомлением.', required=False)
@@ -395,7 +395,8 @@ class ExecutionCooperativeReorganizationForm(forms.Form):
 
 class ExecutionQuestionInfoForm(forms.Form):
     speaker = forms.CharField(required=False, label='По вопросу выступил', help_text='ФИО')
-    theses = forms.CharField(required=False, label='Основные тезисы выступления', help_text='Основные тезисы', widget=forms.Textarea)
+    theses = forms.CharField(required=False, label='Основные тезисы выступления', help_text='Основные тезисы',
+                             widget=forms.Textarea)
 
 
 class ExecutionAskedQuestion(forms.Form):
@@ -467,6 +468,6 @@ class ExecutionTerminationDateForm(forms.Form):
                                           '%Y-%m-%d')}))
 
 
-class MeetingFinishDateForm(forms.Form):
-    date = forms.DateField(label='Дата окончания собрания:',
-                           widget=forms.NumberInput(attrs={'type': 'date'}))
+class MeetingFinishNoQuorumForm(forms.Form):
+    new_meeting = forms.BooleanField(required=False, label='Проводить ли повторное собрание?')
+

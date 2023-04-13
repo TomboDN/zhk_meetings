@@ -20,7 +20,7 @@ from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, Coopera
     ExtramuralExecutionAttendantForm, MeetingChairmanAnotherMember, \
     ExecutionAskedQuestion, ExecutionQuestionInfoForm, ExecutionVoting, ExecutionFIOVoting, MemberVotes, \
     ExecutionCooperativeReorganizationForm, BoardMembersCandidate, BaseMemberVoteFormSet, BoardMembersForm, \
-    ExecutionTerminationDateForm, MeetingFinishDateForm, RegularIntramuralPreparationForm
+    ExecutionTerminationDateForm, RegularIntramuralPreparationForm, MeetingFinishNoQuorumForm
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberInitiator, \
     CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
     CooperativeAcceptedMember, CooperativeQuestion, CooperativeMeetingAskedQuestion, CooperativeMeetingSubQuestion, \
@@ -1043,7 +1043,7 @@ def meeting_execution_attendance_intramural(request, meeting_id):
                     file_expr = "filename*=utf-8''{}".format(quote(filename))
                 response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
                 return response
-                
+
             try:
                 with transaction.atomic():
                     meeting = CooperativeMeeting.objects.get(id=meeting_id)
@@ -1517,43 +1517,48 @@ def meeting_finish(request, meeting_id):
         speakers = CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting)
     else:
         speakers = []
-
+    asked_questions = []
     for speaker in speakers:
-        asked_questions = []
         if CooperativeMeetingAskedQuestion.objects.filter(sub_question=speaker.sub_question_id).exists():
             for asked_question in CooperativeMeetingAskedQuestion.objects.filter(sub_question=speaker.sub_question_id):
                 asked_questions.append(asked_question)
     if request.method == "POST":
-        if 'create_protocol' in request.POST:
-            for member in cooperative_members:
-                protocol = create_protocol(member, meeting, convert_name, attendants, speakers, asked_questions,
-                                        terminated_members, accepted_members, reorganization_accepted_members)
-            filename = "Протокол.docx"
-            response = HttpResponse(protocol,
-                                     content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-            disposition = 'attachment'
-            try:
-                filename.encode('ascii')
-                file_expr = 'filename="{}"'.format(filename)
-            except UnicodeEncodeError:
-                file_expr = "filename*=utf-8''{}".format(quote(filename))
-            response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
-            return response
-        elif 'send_protocol' in request.POST:
-            for member in cooperative_members:
-                protocol = create_protocol(member, meeting, convert_name, attendants, speakers, asked_questions,
-                                        terminated_members, accepted_members, reorganization_accepted_members)
-                send_protocol(meeting, protocol, member.email_address)
-        else:
-            try:
-                with transaction.atomic():
-                    meeting = CooperativeMeeting.objects.get(id=meeting_id)
-                    meeting.meeting_stage = 'finished'
-                    meeting.save()
+        form = MeetingFinishNoQuorumForm(request.POST)
+        if form.is_valid():
+            new_meeting = form.cleaned_data.get('new_meeting')
+            if 'create_protocol' in request.POST:
+                for member in cooperative_members:
+                    protocol = create_protocol(member, meeting, convert_name, attendants, speakers, asked_questions,
+                                               terminated_members, accepted_members, reorganization_accepted_members,
+                                               new_meeting)
+                filename = "Протокол.docx"
+                response = HttpResponse(protocol,
+                                        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                disposition = 'attachment'
+                try:
+                    filename.encode('ascii')
+                    file_expr = 'filename="{}"'.format(filename)
+                except UnicodeEncodeError:
+                    file_expr = "filename*=utf-8''{}".format(quote(filename))
+                response.headers['Content-Disposition'] = '{}; {}'.format(disposition, file_expr)
+                return response
+            elif 'send_protocol' in request.POST:
+                for member in cooperative_members:
+                    protocol = create_protocol(member, meeting, convert_name, attendants, speakers, asked_questions,
+                                               terminated_members, accepted_members, reorganization_accepted_members,
+                                               new_meeting)
+                    send_protocol(meeting, protocol, member.email_address)
+            else:
+                try:
+                    with transaction.atomic():
+                        meeting = CooperativeMeeting.objects.get(id=meeting_id)
+                        meeting.meeting_stage = 'finished'
+                        meeting.new_meeting = new_meeting
+                        meeting.save()
 
-            except IntegrityError:
-                return redirect(
-                    '/meeting_finish/' + str(meeting_id))
-            return redirect('dashboard')
-
-    return render(request=request, template_name="meeting_data/meeting_finish.html")
+                except IntegrityError:
+                    return redirect(
+                        '/meeting_finish/' + str(meeting_id))
+                return redirect('dashboard')
+    form = MeetingFinishNoQuorumForm()
+    return render(request=request, template_name="meeting_data/meeting_finish.html", context={'form': form})
