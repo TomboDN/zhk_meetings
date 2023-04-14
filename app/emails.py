@@ -37,7 +37,26 @@ def send_protocol(cooperative_meeting, protocol, member_email):
 
     EmailThread(mail).start()
 
-    
+
+def send_bulletin(bulletin, member_email):
+    msg = 'Здравствуйте! Сервис для проведения общих собраний членов жилищных кооперативов "Умное собрание" предлагает ознакомиться с информацией в приложении.'
+    subject = 'Бюллетень для голосования на внеочередном заочном собрании'
+
+    from_email = os.environ.get("EMAIL_HOST_USER")
+
+    mail = EmailMessage(
+        subject,
+        msg,
+        from_email,
+        [member_email],
+    )
+
+    mail.attach('Бюллетень.docx', bulletin.getvalue(),
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
+    EmailThread(mail).start()
+
+
 def send_notification_email(cooperative_meeting, notification, user_attachments, member_email):
     msg = 'Здравствуйте! Сервис для проведения общих собраний членов жилищных кооперативов "Умное собрание" предлагает ознакомиться с информацией в приложении.'
     if cooperative_meeting.meeting_type == "regular":

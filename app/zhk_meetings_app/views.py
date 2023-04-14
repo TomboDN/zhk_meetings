@@ -8,7 +8,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.urls import reverse
 from urllib.parse import quote
 
-from doc import create_notification, create_requirement, create_decision, create_protocol, create_list
+from doc import create_notification, create_requirement, create_decision, create_protocol, create_list, create_bulletin
 from emails import *
 from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, CooperativeMembersForm, MemberForm, \
     BaseMemberFormSet, RegularQuestionsForm, ExtramuralQuestionsForm, \
@@ -322,8 +322,6 @@ def cooperative_members_data(request):
                 if fio and email_address:
                     new_members.append(CooperativeMember(cooperative=cooperative, fio=fio, email_address=email_address))
 
-            # Request.FILES check
-            # File parser
             if request.FILES:
                 fio_email_list = str(request.FILES['members_file'].read(), 'UTF-8').split(';')
 
@@ -914,6 +912,8 @@ def meeting_preparation(request, meeting_id):
                                                        terminated_members, accepted_members, files)
                     notification_number += 1
 
+
+
                 filename = "Уведомление.docx"
                 response = HttpResponse(notification,
                                         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -936,6 +936,10 @@ def meeting_preparation(request, meeting_id):
                     send_notification_email(cooperative_meeting=meeting, notification=notification,
                                             user_attachments=files,
                                             member_email=member.email_address)
+                    if meeting.meeting_type == "irregular" and meeting.meeting_format == "extramural":
+                        bulletin = create_bulletin(meeting, member, terminated_members, accepted_members, 
+                                                   notification_number, member.pk)
+                        send_bulletin(bulletin=bulletin, member_email=member.email_address)
                     notification_number += 1
 
                 return redirect('/meeting_execution/' + str(meeting_id))
@@ -1514,13 +1518,13 @@ def meeting_finish(request, meeting_id):
         attendants = []
 
     if CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting).exists():
-        speakers = CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting)
+        sub_questions = CooperativeMeetingSubQuestion.objects.filter(cooperative_meeting=meeting)
     else:
-        speakers = []
+        sub_questions = []
     asked_questions = []
-    for speaker in speakers:
-        if CooperativeMeetingAskedQuestion.objects.filter(sub_question=speaker.sub_question_id).exists():
-            for asked_question in CooperativeMeetingAskedQuestion.objects.filter(sub_question=speaker.sub_question_id):
+    for sub_question in sub_questions:
+        if CooperativeMeetingAskedQuestion.objects.filter(sub_question=sub_question.sub_question_id).exists():
+            for asked_question in CooperativeMeetingAskedQuestion.objects.filter(sub_question=sub_question.sub_question_id):
                 asked_questions.append(asked_question)
     if request.method == "POST":
         form = MeetingFinishNoQuorumForm(request.POST)
@@ -1528,7 +1532,7 @@ def meeting_finish(request, meeting_id):
             new_meeting = form.cleaned_data.get('new_meeting')
             if 'create_protocol' in request.POST:
                 for member in cooperative_members:
-                    protocol = create_protocol(member, meeting, convert_name, attendants, speakers, asked_questions,
+                    protocol = create_protocol(member, meeting, convert_name, attendants, sub_questions, asked_questions,
                                                terminated_members, accepted_members, reorganization_accepted_members,
                                                new_meeting)
                 filename = "Протокол.docx"
@@ -1544,7 +1548,7 @@ def meeting_finish(request, meeting_id):
                 return response
             elif 'send_protocol' in request.POST:
                 for member in cooperative_members:
-                    protocol = create_protocol(member, meeting, convert_name, attendants, speakers, asked_questions,
+                    protocol = create_protocol(member, meeting, convert_name, attendants, sub_questions, asked_questions,
                                                terminated_members, accepted_members, reorganization_accepted_members,
                                                new_meeting)
                     send_protocol(meeting, protocol, member.email_address)
