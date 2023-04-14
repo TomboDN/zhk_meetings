@@ -130,7 +130,7 @@ decisions = {
 
 
 def create_protocol(cooperative_member, meeting, convert_name, attendants, sub_questions, asked_questions,
-                    terminated_members, accepted_members, reorganization_accepted_members, new_meeting=None):
+                    terminated_members, accepted_members, reorganization_accepted_members, new_meeting=None, end_time=None):
     members = '\t'
     number = 1
     for member in attendants:
@@ -173,10 +173,12 @@ def create_protocol(cooperative_member, meeting, convert_name, attendants, sub_q
 
         else:
             continue
-
+        terminated_members_count = 1
+        accepted_members_count = 1
         for sub_question in sub_questions:
             if sub_question.question_id == question.pk:
-                speech += str(number) + '.  По вопросу повестки дня выступил: ' + sub_question.speaker
+                speech += '\n' + str(number) + '.  По вопросу повестки дня выступил: ' + sub_question.speaker
+                number += 1
                 speech += '\n\tОсновные тезисы выступления: ' + sub_question.theses
                 speech += '\n\tБыли заданы вопросы:'
                 number_2 = 1
@@ -193,28 +195,31 @@ def create_protocol(cooperative_member, meeting, convert_name, attendants, sub_q
                 if sub_question.decision:
                     #speech += '\n\tРешение принято\n'
                     if question.question == 'Принятие решения о приеме граждан в члены кооператива':
-                        for member in accepted_members:
-                            speech += decisions['acception_true'] + meeting.cooperative.cooperative_name + '” ' + member.fio
+                        member = accepted_members.get(sequential_id=accepted_members_count)
+                        accepted_members_count += 1
+                        speech += decisions['acception_true'] + meeting.cooperative.cooperative_name + '” ' + member.fio
                     elif question.question == 'Прекращение полномочий отдельных членов правления':
-                        for member in terminated_members:
-                            speech += decisions['termination_true'] + meeting.cooperative.cooperative_name + '” ' + member.fio + ' c ' + member.date.strftime("%d.%m.%Y")
+                        member = terminated_members.get(sequential_id=terminated_members_count)
+                        terminated_members_count += 1
+                        speech += decisions['termination_true'] + meeting.cooperative.cooperative_name + '” ' + member.fio + ' c ' + member.date.strftime("%d.%m.%Y")
                     elif question.question == 'Утверждение годового отчета кооператива и годовой бухгалтерской (финансовой) отчетности кооператива':
-                            speech += decisions['report_true'] + meeting.cooperative.cooperative_name + '”'
+                        speech += decisions['report_true'] + meeting.cooperative.cooperative_name + '”'
                     else:
                         continue
                 else:
                     #speech += '\n\tРешение не принято\n'
                     if question.question == 'Принятие решения о приеме граждан в члены кооператива':
-                        for member in accepted_members:
-                            speech += decisions['acception_false'] + meeting.cooperative.cooperative_name + '” ' + member.fio
+                        member = accepted_members.get(sequential_id=accepted_members_count)
+                        accepted_members_count += 1
+                        speech += decisions['acception_false'] + meeting.cooperative.cooperative_name + '” ' + member.fio
                     elif question.question == 'Прекращение полномочий отдельных членов правления':
-                        for member in terminated_members:
-                            speech += decisions['termination_false'] + meeting.cooperative.cooperative_name + '” ' + member.fio + ' c ' + member.date.strftime("%d.%m.%Y")
+                        member = terminated_members.get(sequential_id=terminated_members_count)
+                        terminated_members_count += 1
+                        speech += decisions['termination_false'] + meeting.cooperative.cooperative_name + '” ' + member.fio + ' c ' + member.date.strftime("%d.%m.%Y")
                     else:
                         continue
 
         speech += '\n'
-        number += 1
         full_speech += speech
         speech = ''
 
@@ -226,7 +231,7 @@ def create_protocol(cooperative_member, meeting, convert_name, attendants, sub_q
                'cooperative_email_address': meeting.cooperative.cooperative_email_address,
                'cooperative_telephone_number': meeting.cooperative.cooperative_telephone_number,
                'date': meeting.date,
-               'end_time': meeting.time,
+               'time': meeting.time,
                'meeting_chairman': meeting.cooperative.chairman_name,
                'secretary': meeting.secretary,
                'email_address': cooperative_member.email_address,
@@ -238,6 +243,8 @@ def create_protocol(cooperative_member, meeting, convert_name, attendants, sub_q
             meeting.meeting_format == 'intramural' and meeting.quorum):
         doc = DocxTemplate("/usr/src/app/doc/Protocol_regular.docx")
         context['speech'] = full_speech
+        context['place'] = meeting.place
+        context['end_time'] = end_time
 
     elif meeting.meeting_format == 'extramural' and meeting.quorum:
         doc = DocxTemplate("/usr/src/app/doc/Protocol_extramural.docx")
@@ -248,6 +255,7 @@ def create_protocol(cooperative_member, meeting, convert_name, attendants, sub_q
 
     else:
         doc = DocxTemplate("/usr/src/app/doc/Protocol_intramural_no_quorum.docx")
+        context['place'] = meeting.place
 
     if new_meeting is not None:
         context['new_meeting'] = no_quorum_new_meeting[new_meeting]

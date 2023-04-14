@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
 from django.forms import formset_factory, BaseFormSet
@@ -1234,10 +1236,10 @@ def execution_common_info(request, meeting_id, question_id, sub_question_id):
 
             try:
                 with transaction.atomic():
-                    if sub_question_object.speaker is not None:
+                    if form.cleaned_data.get('speaker') is not None:
                         sub_question_object.speaker = form.cleaned_data.get('speaker')
                         changes = True
-                    if sub_question_object.theses is not None:
+                    if form.cleaned_data.get('theses') is not None:
                         sub_question_object.theses = form.cleaned_data.get('theses')
                         changes = True
                     if len(questions_list) > 0:
@@ -1523,8 +1525,8 @@ def meeting_finish(request, meeting_id):
         sub_questions = []
     asked_questions = []
     for sub_question in sub_questions:
-        if CooperativeMeetingAskedQuestion.objects.filter(sub_question=sub_question.sub_question_id).exists():
-            for asked_question in CooperativeMeetingAskedQuestion.objects.filter(sub_question=sub_question.sub_question_id):
+        if CooperativeMeetingAskedQuestion.objects.filter(sub_question=sub_question).exists():
+            for asked_question in CooperativeMeetingAskedQuestion.objects.filter(sub_question=sub_question):
                 asked_questions.append(asked_question)
     if request.method == "POST":
         meeting = CooperativeMeeting.objects.get(id=meeting_id)
@@ -1541,7 +1543,7 @@ def meeting_finish(request, meeting_id):
                 for member in cooperative_members:
                     protocol = create_protocol(member, meeting, convert_name, attendants, sub_questions, asked_questions,
                                                terminated_members, accepted_members, reorganization_accepted_members,
-                                               new_meeting)
+                                               new_meeting, datetime.now().strftime('%H:%M:%S'))
                 filename = "Протокол.docx"
                 response = HttpResponse(protocol,
                                         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -1557,7 +1559,7 @@ def meeting_finish(request, meeting_id):
                 for member in cooperative_members:
                     protocol = create_protocol(member, meeting, convert_name, attendants, sub_questions, asked_questions,
                                                terminated_members, accepted_members, reorganization_accepted_members,
-                                               new_meeting)
+                                               new_meeting, datetime.now().strftime('%H:%M:%S'))
                     send_protocol(meeting, protocol, member.email_address)
             else:
                 try:
