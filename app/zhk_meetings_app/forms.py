@@ -471,3 +471,6 @@ class ExecutionTerminationDateForm(forms.Form):
 class MeetingFinishNoQuorumForm(forms.Form):
     new_meeting = forms.BooleanField(required=False, label='Проводить ли повторное собрание?')
 
+
+class MeetingFinishQuorumForm(forms.Form):
+    new_meeting = forms.BooleanField(required=False, widget=forms.HiddenInput())

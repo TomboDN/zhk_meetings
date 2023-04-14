@@ -20,7 +20,7 @@ from .forms import UserRegisterForm, UserLoginForm, CooperativeDataForm, Coopera
     ExtramuralExecutionAttendantForm, MeetingChairmanAnotherMember, \
     ExecutionAskedQuestion, ExecutionQuestionInfoForm, ExecutionVoting, ExecutionFIOVoting, MemberVotes, \
     ExecutionCooperativeReorganizationForm, BoardMembersCandidate, BaseMemberVoteFormSet, BoardMembersForm, \
-    ExecutionTerminationDateForm, RegularIntramuralPreparationForm, MeetingFinishNoQuorumForm
+    ExecutionTerminationDateForm, RegularIntramuralPreparationForm, MeetingFinishNoQuorumForm, MeetingFinishQuorumForm
 from .models import Cooperative, CooperativeMember, CooperativeMeeting, CooperativeMemberInitiator, \
     CooperativeReorganizationAcceptedMember, CooperativeMeetingReorganization, CooperativeTerminatedMember, \
     CooperativeAcceptedMember, CooperativeQuestion, CooperativeMeetingAskedQuestion, CooperativeMeetingSubQuestion, \
@@ -1527,9 +1527,16 @@ def meeting_finish(request, meeting_id):
             for asked_question in CooperativeMeetingAskedQuestion.objects.filter(sub_question=sub_question.sub_question_id):
                 asked_questions.append(asked_question)
     if request.method == "POST":
-        form = MeetingFinishNoQuorumForm(request.POST)
+        meeting = CooperativeMeeting.objects.get(id=meeting_id)
+        if meeting.quorum is True:
+            form = MeetingFinishQuorumForm(request.POST)
+        else:
+            form = MeetingFinishNoQuorumForm(request.POST)
         if form.is_valid():
-            new_meeting = form.cleaned_data.get('new_meeting')
+            if meeting.quorum is False:
+                new_meeting = form.cleaned_data.get('new_meeting')
+            else:
+                new_meeting = False
             if 'create_protocol' in request.POST:
                 for member in cooperative_members:
                     protocol = create_protocol(member, meeting, convert_name, attendants, sub_questions, asked_questions,
@@ -1564,5 +1571,8 @@ def meeting_finish(request, meeting_id):
                     return redirect(
                         '/meeting_finish/' + str(meeting_id))
                 return redirect('dashboard')
-    form = MeetingFinishNoQuorumForm()
+    if meeting.quorum is True:
+        form = MeetingFinishQuorumForm()
+    else:
+        form = MeetingFinishNoQuorumForm()
     return render(request=request, template_name="meeting_data/meeting_finish.html", context={'form': form})
