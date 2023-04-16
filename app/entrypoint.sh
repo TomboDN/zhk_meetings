@@ -24,11 +24,7 @@ python manage.py migrate
 sleep 1
 python manage.py loaddata data.json
 
-# add custom sql functions to db 
-#cat ./sql/fill_tables.sql | python manage.py dbshell
-#python manage.py collectstatic --no-input
-
-#psql -d postgres -U zhk_meetings -h $SQL_HOST -p $SQL_PORT -W -d zhk_db
-#psql -d postgres -U zhk_meetings -h $SQL_HOST -p $SQL_PORT -f ./sql/fill_tables.sql
+cp /usr/lib/python3/dist-packages/unohelper.py /usr/lib/libreoffice/program
+cp /usr/lib/python3/dist-packages/uno.py /usr/lib/libreoffice/program
 
 exec "$@"

@@ -567,9 +567,9 @@ def meeting_requirement_creation(request, meeting_id):
 
         requirement = create_requirement(cooperative_meeting, members)
         if 'create_requirement' in request.POST:
-            filename = "Требование.docx"
+            filename = "Требование.pdf"
             response = HttpResponse(requirement,
-                                    content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                                    content_type='application/pdf')
             disposition = 'attachment'
             try:
                 filename.encode('ascii')
@@ -630,9 +630,9 @@ def meeting_requirement_approval(request, meeting_id):
             decision = create_decision(decision_number, meeting)
 
             if 'create_decision' in request.POST:
-                filename = "Решение о проведении собрания.docx"
+                filename = "Решение о проведении собрания.pdf"
                 response = HttpResponse(decision,
-                                        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                                        content_type='application/pdf')
                 disposition = 'attachment'
                 try:
                     filename.encode('ascii')
@@ -916,9 +916,9 @@ def meeting_preparation(request, meeting_id):
 
 
 
-                filename = "Уведомление.docx"
+                filename = "Уведомление.pdf"
                 response = HttpResponse(notification,
-                                        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                                        content_type='application/pdf')
                 disposition = 'attachment'
                 try:
                     filename.encode('ascii')
@@ -1038,9 +1038,9 @@ def meeting_execution_attendance_intramural(request, meeting_id):
 
                 listt = create_list(attendants, cooperative_meeting)
 
-                filename = "Явочный лист.docx"
+                filename = "Явочный лист.pdf"
                 response = HttpResponse(listt,
-                                        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                                        content_type='application/pdf')
                 disposition = 'attachment'
                 try:
                     filename.encode('ascii')
@@ -1544,9 +1544,9 @@ def meeting_finish(request, meeting_id):
                     protocol = create_protocol(member, meeting, convert_name, attendants, sub_questions, asked_questions,
                                                terminated_members, accepted_members, reorganization_accepted_members,
                                                new_meeting, datetime.now().strftime('%H:%M:%S'))
-                filename = "Протокол.docx"
+                filename = "Протокол.pdf"
                 response = HttpResponse(protocol,
-                                        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                                        content_type='application/pdf')
                 disposition = 'attachment'
                 try:
                     filename.encode('ascii')

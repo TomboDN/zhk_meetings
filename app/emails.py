@@ -32,8 +32,8 @@ def send_protocol(cooperative_meeting, protocol, member_email):
         [member_email],
     )
 
-    mail.attach('Протокол.docx', protocol.getvalue(),
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    mail.attach('Протокол.pdf', protocol.getvalue(),
+                'application/pdf')
 
     EmailThread(mail).start()
 
@@ -51,8 +51,8 @@ def send_bulletin(bulletin, member_email):
         [member_email],
     )
 
-    mail.attach('Бюллетень.docx', bulletin.getvalue(),
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    mail.attach('Бюллетень.pdf', bulletin.getvalue(),
+                'application/pdf')
 
     EmailThread(mail).start()
 
@@ -75,8 +75,8 @@ def send_notification_email(cooperative_meeting, notification, user_attachments,
         [member_email],
     )
 
-    mail.attach('Уведомление.docx', notification.getvalue(),
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    mail.attach('Уведомление.pdf', notification.getvalue(),
+                'application/pdf')
 
     for file in user_attachments:
         mail.attach(file.name, file.read(), file.content_type)
@@ -112,8 +112,8 @@ def send_requirement(cooperative_meeting, requirement_file):
         to_email,
     )
 
-    mail.attach('Требование.docx', requirement_file.getvalue(),
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    mail.attach('Требование.pdf', requirement_file.getvalue(),
+                'application/pdf')
 
     EmailThread(mail).start()
 
@@ -141,7 +141,7 @@ def send_decision(cooperative_meeting, decision_file):
         to_email,
     )
 
-    mail.attach('Решение о проведении собрания.docx', decision_file.getvalue(),
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    mail.attach('Решение о проведении собрания.pdf', decision_file.getvalue(),
+                'application/pdf')
 
     EmailThread(mail).start()

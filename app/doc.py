@@ -1,6 +1,8 @@
 import datetime
 import io
+from pdfrw import PdfReader, PdfWriter
 import jinja2
+import subprocess
 
 from docxtpl import DocxTemplate
 
@@ -10,6 +12,18 @@ def strings_creating(shift, elements):
     for index, element in enumerate(elements):
         elements_string = elements_string + str(index + shift + 1) + '. ' + element + '\n\t'
     return elements_string
+
+
+def convert_to_pdf(doc_path):
+    try:
+        subprocess.run(['unoconv', '-f', 'pdf', doc_path + '.docx'])
+    except subprocess.CalledProcessError as e:
+        print("CalledProcessError", e)
+    pdf = PdfReader(doc_path + '.pdf')
+    file_stream = io.BytesIO()
+    PdfWriter().write(file_stream, pdf)
+    file_stream.seek(0)
+    return file_stream
 
 
 def create_list(attendants, meeting):
@@ -45,11 +59,9 @@ def create_list(attendants, meeting):
 
     jinja_env = jinja2.Environment(autoescape=True)
     tpl.render(context, jinja_env)
-    tpl.save('/usr/src/app/List.docx')
-    file_stream = io.BytesIO()
-    tpl.save(file_stream)
-    file_stream.seek(0)
-    return file_stream
+    doc_path = '/usr/src/app/List'
+    tpl.save(doc_path + '.docx')
+    return convert_to_pdf(doc_path)
 
 
 def create_bulletin(meeting, member, terminated_members, accepted_members, notification_number, pk):
@@ -102,11 +114,9 @@ def create_bulletin(meeting, member, terminated_members, accepted_members, notif
 
     jinja_env = jinja2.Environment(autoescape=True)
     tpl.render(context, jinja_env)
-    tpl.save('/usr/src/app/Bulletin.docx')
-    file_stream = io.BytesIO()
-    tpl.save(file_stream)
-    file_stream.seek(0)
-    return file_stream
+    doc_path = '/usr/src/app/Bulletin'
+    tpl.save(doc_path + '.docx')
+    return convert_to_pdf(doc_path)
 
 
 no_quorum_new_meeting = {
@@ -261,11 +271,9 @@ def create_protocol(cooperative_member, meeting, convert_name, attendants, sub_q
         context['new_meeting'] = no_quorum_new_meeting[new_meeting]
 
     doc.render(context)
-    doc.save('/usr/src/app/notification.docx')
-    file_stream = io.BytesIO()
-    doc.save(file_stream)
-    file_stream.seek(0)
-    return file_stream
+    doc_path = '/usr/src/app/notification'
+    doc.save(doc_path + '.docx')
+    return convert_to_pdf(doc_path)
 
 
 def create_decision(decision_number, meeting):
@@ -324,11 +332,9 @@ def create_decision(decision_number, meeting):
         context['conduct_reason'] = conduct_reason
 
     doc.render(context)
-    doc.save('/usr/src/app/decision.docx')
-    file_stream = io.BytesIO()
-    doc.save(file_stream)
-    file_stream.seek(0)
-    return file_stream
+    doc_path = '/usr/src/app/decision'
+    doc.save(doc_path + '.docx')
+    return convert_to_pdf(doc_path)
 
 
 def create_requirement(meeting, members):
@@ -373,11 +379,9 @@ def create_requirement(meeting, members):
         doc = DocxTemplate("/usr/src/app/doc/Requirement_extramural.docx")
 
     doc.render(context)
-    doc.save('/usr/src/app/requirement.docx')
-    file_stream = io.BytesIO()
-    doc.save(file_stream)
-    file_stream.seek(0)
-    return file_stream
+    doc_path = '/usr/src/app/requirement'
+    doc.save(doc_path + '.docx')
+    return convert_to_pdf(doc_path)
 
 
 def create_notification(notification_number, pk, fio, meeting, responsible_name, convert_name,
@@ -473,8 +477,7 @@ def create_notification(notification_number, pk, fio, meeting, responsible_name,
             doc = DocxTemplate("/usr/src/app/doc/Notification_regular.docx")
 
     doc.render(context)
-    doc.save('/usr/src/app/notification' + str(notification_number) + '.docx')
-    file_stream = io.BytesIO()
-    doc.save(file_stream)
-    file_stream.seek(0)
-    return file_stream
+    doc_path = '/usr/src/app/notification' + str(notification_number)
+    doc.save(doc_path + '.docx')
+    return convert_to_pdf(doc_path)
+

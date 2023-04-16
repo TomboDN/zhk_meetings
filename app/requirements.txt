@@ -12,3 +12,4 @@ django-phonenumber-field==7.0.2
 django-phonenumbers==1.0.1
 django-dynamic-formsets==0.0.8
 docxtpl==0.16.6
+pdfrw==0.4
