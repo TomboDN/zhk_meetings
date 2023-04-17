@@ -79,7 +79,13 @@ def send_notification_email(cooperative_meeting, notification, user_attachments,
                 'application/pdf')
 
     for file in user_attachments:
-        mail.attach(file.name, file.read(), file.content_type)
+        content = None
+        for chunk in file.chunks():
+            if content is None:
+                content = chunk
+            else:
+                content += chunk
+        mail.attach(file.name, content, file.content_type)
 
     EmailThread(mail).start()
 
