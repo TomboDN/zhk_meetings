@@ -40,7 +40,7 @@ class Cooperative(models.Model):
     cooperative_user = models.ForeignKey(User, on_delete=models.CASCADE)
     cooperative_name = models.CharField(max_length=255)
     cooperative_itn = models.CharField(max_length=12)
-    cooperative_address = models.CharField(max_length=255)
+    cooperative_address = models.TextField()
     cooperative_email_address = models.EmailField()
     cooperative_telephone_number = PhoneNumberField(null=False, blank=False, unique=True)
     chairman_name = models.CharField(max_length=255)
@@ -58,7 +58,7 @@ class CooperativeMember(models.Model):
 
 
 class CooperativeQuestion(models.Model):
-    question = models.CharField(max_length=255)
+    question = models.TextField()
     is_report_approval = models.BooleanField(default=False)
     is_clickable = models.BooleanField(default=False)
     is_available_for_regular_meeting = models.BooleanField()
@@ -81,7 +81,7 @@ class CooperativeMeeting(models.Model):
     conduct_reason = models.IntegerField(null=True)
     date = models.DateField(null=True)
     time = models.TimeField(null=True)
-    place = models.CharField(max_length=255)
+    place = models.TextField()
     meeting_chairman = models.CharField(max_length=255)
     vote_counter = models.CharField(max_length=255)
     secretary = models.CharField(max_length=255)
@@ -131,10 +131,10 @@ class CooperativeMeetingSubQuestion(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
     question_id = models.IntegerField(null=True)
     sub_question_id = models.IntegerField(null=True)
-    title = models.CharField(max_length=255)
-    sub_question = models.CharField(max_length=255)
-    speaker = models.CharField(max_length=255)
-    theses = models.CharField(max_length=255)
+    title = models.TextField()
+    sub_question = models.TextField()
+    speaker = models.TextField()
+    theses = models.TextField()
     votes_for = models.IntegerField(null=True)
     votes_against = models.IntegerField(null=True)
     votes_abstained = models.IntegerField(null=True)
@@ -144,7 +144,7 @@ class CooperativeMeetingSubQuestion(models.Model):
 
 class CooperativeMeetingAskedQuestion(models.Model):
     sub_question = models.ForeignKey(CooperativeMeetingSubQuestion, on_delete=models.CASCADE)
-    question = models.CharField(max_length=255)
+    question = models.TextField()
 
 
 class CooperativeMeetingMemberCandidate(models.Model):
@@ -159,4 +159,4 @@ class CooperativeMeetingMemberCandidate(models.Model):
 class CooperativeMeetingTSZH(models.Model):
     cooperative_meeting = models.ForeignKey(CooperativeMeeting, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    place = models.CharField(max_length=255)
+    place = models.TextField()

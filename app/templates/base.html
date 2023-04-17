@@ -17,15 +17,14 @@
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="/">
           <img style="margin-right: 10px" src="{% static 'logo.png' %}" alt="" width="60" height="60" class="d-inline-block align-text-top">
-          Умное собрание
       </a>
         <button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-3"><span
                 class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
         <div class="d-flex align-items-center" id="navcol-3">
             {% if user.is_authenticated %}
-                <ul class="navbar-nav" style="margin-right: 20vw">
-                    <li class="nav-item"><a class="nav-link active" href="/dashboard">Личный кабинет</a></li>
-                </ul>
+                <form action="/dashboard" method="GET" style="margin-right: 10px">
+                    <button class="btn btn-primary" type="submit">Личный кабинет</button>
+                </form>
                 <form action="{% url 'logout' %}" method="GET">
                     <button class="btn btn-primary" type="submit">Выйти из аккаунта</button>
                 </form>
