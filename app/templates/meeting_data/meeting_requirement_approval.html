@@ -6,9 +6,29 @@
             <div class="row d-flex justify-content-center">
                 <div class="col-md-8 col-lg-6 col-xl-5 col-xxl-5">
                     <div class="card mb-5">
-                        <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
-                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Принятие решения о
-                                проведении собрания</h2>
+                        <div class="card-body p-sm-5">
+                            <div class="d-flex flex-row  align-items-center">
+                                <h2 class="text-center mb-4" id="form_heading">Принятие решения о проведении собрания</h2>
+                                <button type="button" id="tip"
+                                        class="original-border" style="margin-left: 10px; padding-left: 10px; padding-right: 10px"
+                                        onclick="showTip()">
+                                    ?
+                                </button>
+                            </div>
+                            <div style="display: none; white-space: pre-line;" id="data"
+                                 class="alert alert-primary" role="alert">
+                                <p>Решение принимается правлением кооператива.
+
+                                    Решение должно быть принято в течение срока, который указан в Уставе вашего
+                                    кооператива. Обычно такой срок составляет не более 5 дней.
+
+                                    При отклонении требования необходимо выбрать причину из предложенного списка.
+                                    Обратите внимание, что необоснованное отклонение решения может быть обжаловано
+                                    членом жилищного кооператива в судебном порядке.
+
+                                    Решение о проведении или об отказе в проведении собрания будет автоматически
+                                    направлено инициатору.</p>
+                            </div>
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="mb-3">
@@ -19,7 +39,8 @@
                                 </div>
                                 <div>
                                     <button class="btn btn-primary d-block w-100" name="create_decision"
-                                            id="create_decision" type="submit" style="margin-top: 40px; margin-bottom: 30px;">
+                                            id="create_decision" type="submit"
+                                            style="margin-top: 40px; margin-bottom: 30px;">
                                         Сформировать Решение
                                     </button>
                                     <button class="btn btn-primary d-block w-100" name="continue" id="continue"
@@ -35,6 +56,15 @@
         </div>
     </section>
     <script>
+        const tip_div = document.getElementById('data')
+
+        function showTip() {
+            if (tip_div.style.display === "none") {
+                tip_div.style.display = "block"
+            } else {
+                tip_div.style.display = "none"
+            }
+        }
         function check() {
             if (document.getElementById("id_conduct_decision_1").checked) {
                 document.getElementById("reasonDiv").style.display = "block";

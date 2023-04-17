@@ -7,7 +7,50 @@
                 <div class="col-auto">
                     <div class="card mb-5">
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
-                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">Выберите вопросы для рассмотрения на собрании</h2>
+                            <div class="d-flex flex-row align-items-center">
+                                <h2 class="text-center mb-4" id="form_heading">Выберите вопросы для рассмотрения на
+                                    собрании</h2>
+                                <button type="button" id="tip" style="margin-left: 10px; margin-bottom: 10px" class="original-border"
+                                        onclick="showTip()">
+                                    ?
+                                </button>
+                            </div>
+                            <div style="display: none; white-space: pre-line;" id="data1"
+                                 class="alert alert-primary" role="alert">
+                                <p>В списке представлены вопросы, которые наиболее часто рассматриваются на общем
+                                    собрании членов жилищных кооперативов. Если вопрос выбран по умолчанию сервисом,
+                                    значит он обязателен для рассмотрения на очередном собрании.
+
+                                    Если в списке нет нужного вам вопроса, вы можете ввести его самостоятельно.
+
+                                    Перед выбором или самостоятельным вводом вопросов убедитесь, что в соответствии с
+                                    Уставом вашего кооператива они могут быть рассмотрены на общем собрании.</p>
+                            </div>
+                            <div style="display: none; white-space: pre-line;" id="data2"
+                                 class="alert alert-primary" role="alert">
+                                <p>В списке представлены вопросы, которые наиболее часто рассматриваются на общем
+                                    собрании членов жилищных кооперативов.
+
+                                    Если вы не нашли в списке нужный вам вопрос, возможно, он не может быть рассмотрен
+                                    на внеочередном собрании. Для включения в повестку дня нужного вам вопроса вы можете
+                                    изменить вид собрания или ввести вопрос вручную.
+
+                                    Перед выбором или самостоятельным вводом вопросов убедитесь, что в соответствии с
+                                    Уставом вашего кооператива они могут быть рассмотрены на общем собрании.</p>
+                            </div>
+                            <div style="display: none; white-space: pre-line;" id="data3"
+                                 class="alert alert-primary" role="alert">
+                                <p>В списке представлены вопросы, которые наиболее часто рассматриваются на общем
+                                    собрании членов жилищных кооперативов.
+
+                                    Если вы не нашли в списке нужный вам вопрос, возможно, он не может быть рассмотрен
+                                    на внеочередном собрании или в заочном формате. Для включения в повестку дня нужного
+                                    вам вопроса вы можете изменить формат или вид собрания или ввести вопрос вручную.
+
+                                    Перед выбором или самостоятельным вводом вопросов убедитесь, что в соответствии с
+                                    Уставом вашего кооператива они могут быть рассмотрены на общем собрании.</p>
+                            </div>
+
                             <form method="post">
                                 {% csrf_token %}
                                 <div class="mb-3">
@@ -28,4 +71,16 @@
             </div>
         </div>
     </section>
+    <script>
+        const div_id = {{ meeting_type_id }};
+        const tip_div = document.getElementById('data' + div_id)
+
+        function showTip() {
+            if (tip_div.style.display === "none") {
+                tip_div.style.display = "block"
+            } else {
+                tip_div.style.display = "none"
+            }
+        }
+    </script>
 {% endblock content %}

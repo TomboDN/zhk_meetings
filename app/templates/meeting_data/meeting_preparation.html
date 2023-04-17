@@ -8,7 +8,55 @@
                 <div class="col-md-8 col-lg-6 col-xl-5 col-xxl-5">
                     <div class="card mb-5">
                         <div class="card-body p-sm-5" style="margin-left: 0px;padding-left: 28px;">
-                            <h2 class="text-center mb-4" id="form_heading" style="margin-top: -40px;">{{ title }}</h2>
+                            <div class="d-flex flex-row align-items-center">
+                                <h2 class="text-center mb-4" id="form_heading">{{ title }}</h2>
+                                <button type="button" id="tip"
+                                        style="margin-left: 10px; margin-bottom: 10px; padding-right: 10px; padding-left: 10px"
+                                        class="original-border"
+                                        onclick="showMainTip()">
+                                    ?
+                                </button>
+                            </div>
+                            <div style="display: none; white-space: pre-line;" id="data1"
+                                 class="alert alert-primary" role="alert">
+                                <p>Необходимо указать точные дату, время и место проведения собрания. Обратите внимание,
+                                    что очередное собрание должно быть проведено строго с 1 марта по 30 июня.
+
+                                    Для решения вопросов повестки дня участникам для ознакомления необходимо отправить
+                                    соответствующие документы. В целях корректной работы сервиса рекомендуется, чтобы
+                                    название файла соответствовало его содержанию.
+
+                                    Если в повестку дня включено несколько вопросов, необходимо загрузить документы по
+                                    каждому из них.</p>
+                            </div>
+                            <div style="display: none; white-space: pre-line;" id="data2"
+                                 class="alert alert-primary" role="alert">
+                                <p>Необходимо указать точные дату, время и место проведения собрания. Уставом
+                                    кооператива обычно предусматривается срок со дня предъявления требования, в который
+                                    должно быть проведено общее собрание. Перед указанием даты уточните это в Уставе
+                                    вашего кооператива.
+
+                                    Для решения вопросов повестки дня участникам для ознакомления необходимо отправить
+                                    соответствующие документы. В целях корректной работы сервиса рекомендуется, чтобы
+                                    название файла соответствовало его содержанию.
+
+                                    Если в повестку дня включено несколько вопросов, необходимо загрузить документы по
+                                    каждому из них.</p>
+                            </div>
+                            <div style="display: none; white-space: pre-line;" id="data3"
+                                 class="alert alert-primary" role="alert">
+                                <p>Необходимо указать точные дату и время, до которых члены кооператива должны направить
+                                    заполненные бюллетени. Уставом кооператива обычно предусматривается срок со дня
+                                    предъявления требования, в который должно быть проведено общее собрание. Перед
+                                    указанием даты уточните это в Уставе вашего кооператива.
+
+                                    Для решения вопросов повестки дня участникам для ознакомления необходимо отправить
+                                    соответствующие документы. В целях корректной работы сервиса рекомендуется, чтобы
+                                    название файла соответствовало его содержанию.
+
+                                    Если в повестку дня включено несколько вопросов, необходимо загрузить документы по
+                                    каждому из них.</p>
+                            </div>
                             <form method="post" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <div class="mb-3">
@@ -69,6 +117,16 @@
         const tip_div = document.getElementById('t_data')
         let appendixTooltip = document.getElementById('appendix-tooltip')
         appendixTooltip.innerText = appendixTooltip.innerText.trim()
+        const div_id = {{ m_type }};
+        const main_tip_div = document.getElementById('data' + div_id)
+
+        function showMainTip() {
+            if (main_tip_div.style.display === "none") {
+                main_tip_div.style.display = "block"
+            } else {
+                main_tip_div.style.display = "none"
+            }
+        }
 
         function showTip() {
             if (tip_div.style.display === "none") {

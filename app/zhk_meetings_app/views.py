@@ -417,10 +417,13 @@ def meeting_questions(request, meeting_id):
     if meeting.meeting_type == "regular":
         form = RegularQuestionsForm(initial={'questions': CooperativeQuestion.objects.filter(
             is_report_approval=True)})
+        meeting_type_id = 1
     elif meeting.meeting_type == "irregular" and meeting.meeting_format == "intramural":
         form = IntramuralQuestionsForm()
+        meeting_type_id = 2
     elif meeting.meeting_type == "irregular" and meeting.meeting_format == "extramural":
         form = ExtramuralQuestionsForm()
+        meeting_type_id = 3
 
     if request.method == "POST":
         if meeting.meeting_type == 'regular':
@@ -465,7 +468,8 @@ def meeting_questions(request, meeting_id):
             print(form.errors.as_data())
             return redirect('/meeting_questions/' + str(meeting_id))
 
-    return render(request=request, template_name="meeting_data/meeting_questions.html", context={"form": form})
+    return render(request=request, template_name="meeting_data/meeting_questions.html",
+                  context={"form": form, 'meeting_type_id': meeting_type_id})
 
 
 @login_required
@@ -914,8 +918,6 @@ def meeting_preparation(request, meeting_id):
                                                        terminated_members, accepted_members, files)
                     notification_number += 1
 
-
-
                 filename = "Уведомление.pdf"
                 response = HttpResponse(notification,
                                         content_type='application/pdf')
@@ -939,7 +941,7 @@ def meeting_preparation(request, meeting_id):
                                             user_attachments=files,
                                             member_email=member.email_address)
                     if meeting.meeting_type == "irregular" and meeting.meeting_format == "extramural":
-                        bulletin = create_bulletin(meeting, member, terminated_members, accepted_members, 
+                        bulletin = create_bulletin(meeting, member, terminated_members, accepted_members,
                                                    notification_number, member.pk)
                         send_bulletin(bulletin=bulletin, member_email=member.email_address)
                     notification_number += 1
@@ -1541,7 +1543,8 @@ def meeting_finish(request, meeting_id):
                 new_meeting = False
             if 'create_protocol' in request.POST:
                 for member in cooperative_members:
-                    protocol = create_protocol(member, meeting, convert_name, attendants, sub_questions, asked_questions,
+                    protocol = create_protocol(member, meeting, convert_name, attendants, sub_questions,
+                                               asked_questions,
                                                terminated_members, accepted_members, reorganization_accepted_members,
                                                new_meeting, datetime.now().strftime('%H:%M:%S'))
                 filename = "Протокол.pdf"
@@ -1557,7 +1560,8 @@ def meeting_finish(request, meeting_id):
                 return response
             elif 'send_protocol' in request.POST:
                 for member in cooperative_members:
-                    protocol = create_protocol(member, meeting, convert_name, attendants, sub_questions, asked_questions,
+                    protocol = create_protocol(member, meeting, convert_name, attendants, sub_questions,
+                                               asked_questions,
                                                terminated_members, accepted_members, reorganization_accepted_members,
                                                new_meeting, datetime.now().strftime('%H:%M:%S'))
                     send_protocol(meeting, protocol, member.email_address)
