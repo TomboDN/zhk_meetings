@@ -20,11 +20,11 @@
                                 <div class="mb-3">
                                     {{ form.password2|as_crispy_field }}
                                 </div>
-                                <div class="d-flex flex-row alert alert-secondary">
-                                    <input type="checkbox" onchange="check()" name="responsibility" id="responsibility"
-                                           class="checkbox"/>
-                                    <label style="margin-left: 10px" for="responsibility">Пользователь согласен с тем, что сервис носит справочный характер.</label>
-                                </div>
+{#                                <div class="d-flex flex-row alert alert-secondary">#}
+{#                                    <input type="checkbox" onchange="check()" name="responsibility" id="responsibility"#}
+{#                                           class="checkbox"/>#}
+{#                                    <label style="margin-left: 10px" for="responsibility">Пользователь согласен с тем, что сервис носит справочный характер.</label>#}
+{#                                </div>#}
                                 <div>
                                     <button class="btn btn-primary d-block w-100" id="submit" type="submit">
                                         Зарегистрироваться
@@ -37,13 +37,18 @@
             </div>
         </div>
     </section>
-    <script>
-        window.onload = check
-        let checkbox = document.getElementById('responsibility')
-        let button = document.getElementById('submit')
-
-        function check() {
-            button.disabled = checkbox.checked === false;
-        }
-    </script>
+    <footer class=" text-center text-lg-start fixed-bottom">
+        <div class="text-center p-3 small">
+            Администрация сайта не несёт ответственности за действия пользователя при работе с информацией, содержащейся в сервисе. Все материалы, представленные в сервисе, являются актуальными, соответствуют законодательству и носят исключительно справочный характер.
+      </div>
+    </footer>
+{#    <script>#}
+{#        window.onload = check#}
+{#        let checkbox = document.getElementById('responsibility')#}
+{#        let button = document.getElementById('submit')#}
+{##}
+{#        function check() {#}
+{#            button.disabled = checkbox.checked === false;#}
+{#        }#}
+{#    </script>#}
 {% endblock content %}
