@@ -23,6 +23,7 @@ python manage.py makemigrations
 python manage.py migrate
 sleep 1
 python manage.py loaddata data.json
+python manage.py collectstatic
 
 cp /usr/lib/python3/dist-packages/unohelper.py /usr/lib/libreoffice/program
 cp /usr/lib/python3/dist-packages/uno.py /usr/lib/libreoffice/program

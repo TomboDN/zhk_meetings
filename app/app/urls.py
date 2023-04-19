@@ -15,7 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+
+from app import settings
 from zhk_meetings_app import views as zhk_views
+from django.views.static import serve
 
 urlpatterns = [
     path('', zhk_views.home, name='home'),
@@ -57,4 +60,5 @@ urlpatterns = [
          zhk_views.execution_after_info, name='execution_after_info'),
     path('meeting_finish/<int:meeting_id>/', zhk_views.meeting_finish,
          name='meeting_finish'),
+    path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
 ]
